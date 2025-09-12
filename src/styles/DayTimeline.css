@@ -1,0 +1,16 @@
+.day-timeline {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  background-color: #fff;
+}
+
+.timeline-scroll {
+  max-height: 100%;
+  overflow-y: scroll;
+}
+
+.hour-block {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+}
