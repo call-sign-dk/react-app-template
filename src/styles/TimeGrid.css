@@ -1,0 +1,107 @@
+.time-grid-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.time-grid-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.time-grid-header h2 {
+  font-size: var(--font-size-xlarge);
+  color: var(--primary-color);
+}
+
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 10px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.time-slot {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--light-gray);
+  position: relative;
+  min-height: 100px;
+}
+
+.time-label {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  font-size: var(--font-size-small);
+  color: #666;
+  z-index: 1;
+}
+
+.slot-content {
+  position: relative;
+  height: 100%;
+  padding-top: 25px; /* Space for time label */
+}
+
+.appointment-block {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0 5px;
+  border-radius: var(--border-radius);
+  color: white;
+  padding: 5px;
+  overflow: hidden;
+  font-size: var(--font-size-small);
+  z-index: 2;
+}
+
+.appointment-info {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.appointment-title {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appointment-time {
+  font-size: 0.75rem;
+}
+
+.info-icon {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  font-size: 0.75rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .time-grid {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .time-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(12, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .time-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(24, 1fr);
+  }
+}

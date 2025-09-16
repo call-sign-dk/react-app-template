@@ -1,0 +1,75 @@
+.sidebar {
+  padding: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-title {
+  font-size: var(--font-size-xlarge);
+  margin-bottom: 20px;
+  color: var(--primary-color);
+}
+
+.date-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.nav-button {
+  background: none;
+  border: none;
+  font-size: var(--font-size-large);
+  color: var(--primary-color);
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.current-month {
+  font-size: var(--font-size-large);
+  font-weight: 600;
+  margin: 0 15px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.calendar-dropdown {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  background: white;
+  padding: 10px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+}
+
+.dropdown-icon {
+  margin-right: 10px;
+  color: var(--primary-color);
+}
+
+.month-select, .year-select {
+  padding: 5px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  margin-right: 10px;
+  font-size: var(--font-size-normal);
+}
+
+.appointments-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.appointments-section h4 {
+  margin-bottom: 15px;
+  font-size: var(--font-size-normal);
+}
+
+.appointments-container {
+  flex: 1;
+  overflow-y: auto;
+}

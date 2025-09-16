@@ -1,15 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
+import Sidebar from './components/Sidebar';
+import TimeGrid from './components/TimeGrid';
 import AddAppointmentModal from './components/AddAppointmentModal';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faBars, faTimes } from '@fortawesome/free-solid-svg-icons';
 import './App.css';
 
 function App() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [appointments, setAppointments] = useState({});
   const [showModal, setShowModal] = useState(false);
-
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Format date to YYYY-MM-DD for use as object keys
   const formatDateKey = (date) => date.toISOString().substring(0, 10);
-
+  
+  // Navigation functions
   const handlePrevDate = () => {
     const prev = new Date(selectedDate);
     prev.setDate(prev.getDate() - 1);
@@ -21,12 +28,14 @@ function App() {
     next.setDate(next.getDate() + 1);
     setSelectedDate(next);
   };
-
+  
+  // Parse time string to minutes for conflict checking
   const parseTime = (t) => {
     const [h, m] = t.split(':').map(Number);
     return h * 60 + m;
   };
-
+  
+  // Handle adding a new appointment
   const handleAddAppointment = (newAppt) => {
     const dateKey = newAppt.date;
     const existing = appointments[dateKey] || [];
@@ -34,6 +43,7 @@ function App() {
     const newFrom = parseTime(newAppt.from);
     const newTo = parseTime(newAppt.to);
 
+    // Check for conflicts
     const hasConflict = existing.some((appt) => {
       const from = parseTime(appt.from);
       const to = parseTime(appt.to);
@@ -49,83 +59,57 @@ function App() {
       return;
     }
 
+    // Add the new appointment
     const updated = {
       ...appointments,
       [dateKey]: [...existing, newAppt],
     };
 
     setAppointments(updated);
+    setShowModal(false);
   };
-
-  const todayKey = formatDateKey(selectedDate);
-  const todaysAppointments = appointments[todayKey] || [];
+  
+  // Toggle mobile menu
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
 
   return (
     <div className="App">
-      {/* Keep Header if you want for branding or just leave it */}
-      <Header
-        date={selectedDate}
-        onPrev={handlePrevDate}
-        onNext={handleNextDate}
-        onAdd={() => setShowModal(true)}
-      />
-
+      <Header />
+      
       <div className="content">
-        {/* Left Pane: Appointments List */}
-        <div className="left-pane">
-          <h3>Appointments</h3>
-          <ul>
-            {todaysAppointments.map((appt, idx) => (
-              <li key={idx} className={`appt ${appt.priority}`}>
-                <strong>{appt.from} - {appt.to}</strong>
-                <div>{appt.title}</div>
-              </li>
-            ))}
-          </ul>
+        {/* Mobile menu toggle button */}
+        <button className="mobile-menu-toggle" onClick={toggleMobileMenu}>
+          <FontAwesomeIcon icon={mobileMenuOpen ? faTimes : faBars} />
+        </button>
+        
+        {/* Sidebar - hidden on mobile unless menu is open */}
+        <div className={`sidebar-container ${mobileMenuOpen ? 'open' : ''}`}>
+          <Sidebar 
+            date={selectedDate}
+            onPrev={handlePrevDate}
+            onNext={handleNextDate}
+            appointments={appointments}
+            onSelectDate={setSelectedDate}
+          />
         </div>
-
-        {/* Right Pane: Timeline and Controls */}
-        <div className="right-pane">
-          {/* Header in Right Pane with Navigation and Add Button */}
-          <div className="right-pane-header">
-            <div className="date-nav">
-              <button onClick={handlePrevDate}>←</button>
-              <h3>{selectedDate.toDateString()}</h3>
-              <button onClick={handleNextDate}>→</button>
-              <button onClick={() => setShowModal(true)} className="add-appt-btn">+ Add Appointment</button>
-            </div>
-          </div>
-
-          {/* Time Matrix (6x4 Grid of 24 Hours) */}
-          <div className="timeline-grid">
-            {[...Array(24)].map((_, hour) => (
-              <div key={hour} className="grid-slot">
-                <span className="time-label">{hour.toString().padStart(2, '0')}:00</span>
-                <div className="slot-box">
-                  {todaysAppointments.map((appt, i) => {
-                    const from = parseTime(appt.from);
-                    const to = parseTime(appt.to);
-                    const start = from / 60;
-                    const end = to / 60;
-                    if (start <= hour && hour < end) {
-                      return (
-                        <div
-                          key={i}
-                          className={`slot ${appt.priority}`}
-                          title={`${appt.title} (${appt.from}–${appt.to})`}
-                        ></div>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
+        
+        {/* Main content area with time grid */}
+        <div className="main-content">
+          <TimeGrid 
+            date={selectedDate}
+            appointments={appointments}
+          />
+          
+          {/* Add appointment button */}
+          <button className="add-appointment-btn" onClick={() => setShowModal(true)}>
+            <FontAwesomeIcon icon={faPlus} />
+          </button>
         </div>
       </div>
-
-      {/* Modal for Adding Appointment */}
+      
+      {/* Add appointment modal */}
       {showModal && (
         <AddAppointmentModal
           defaultDate={selectedDate}
