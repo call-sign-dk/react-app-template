@@ -56,12 +56,6 @@ function App() {
     setSelectedDate(next);
   };
   
-  // Parse time string to minutes for conflict checking
-  const parseTime = (t) => {
-    const [h, m] = t.split(':').map(Number);
-    return h * 60 + m;
-  };
-  
   // Handle adding a new appointment
   const handleAddAppointment = async (newAppt) => {
     try {
@@ -120,55 +114,54 @@ function App() {
   const todaysAppointments = appointments[todayKey] || [];
 
   return (
-    <div className="App">
+    <div className="app-container">
       <Header />
       
-      <div className="content">
-        {/* Left Pane: Appointments List */}
-        <div className="left-pane">
-          <h3>Appointments</h3>
-          {loading ? (
-            <div className="loading-indicator">
-              <div className="loading-spinner"></div>
-            </div>
-          ) : todaysAppointments.length === 0 ? (
-            <p className="no-appointments">No appointments scheduled</p>
-          ) : (
-            <ul>
-              {todaysAppointments.map((appt) => (
-                <li key={appt.id} className={`appt ${appt.priority}`}>
-                  <strong>{appt.from} - {appt.to}</strong>
-                  <div>{appt.title}</div>
-                  <button 
-                    className="delete-btn" 
-                    onClick={() => handleDeleteAppointment(appt.id, appt.date)}
-                  >
-                    ×
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+      <div className="main-content">
+        {/* Date Navigation */}
+        <div className="date-navigation">
+          <button className="nav-button" onClick={handlePrevDate}>←</button>
+          <h2 className="current-date">{selectedDate.toDateString()}</h2>
+          <button className="nav-button" onClick={handleNextDate}>→</button>
+          <button className="add-button" onClick={() => setShowModal(true)}>+ Add Appointment</button>
         </div>
-
-        {/* Right Pane: Timeline and Controls */}
-        <div className="right-pane">
-          {/* Header in Right Pane with Navigation and Add Button */}
-          <div className="right-pane-header">
-            <div className="date-nav">
-              <button onClick={handlePrevDate}>←</button>
-              <h3>{selectedDate.toDateString()}</h3>
-              <button onClick={handleNextDate}>→</button>
-              <button onClick={() => setShowModal(true)} className="add-appt-btn">+ Add Appointment</button>
-            </div>
+        
+        <div className="content-wrapper">
+          {/* Left Pane: Appointments List */}
+          <div className="appointments-panel">
+            <h3>Today's Appointments</h3>
+            {loading ? (
+              <div className="loading-indicator">
+                <div className="loading-spinner"></div>
+              </div>
+            ) : todaysAppointments.length === 0 ? (
+              <p className="no-appointments">No appointments scheduled</p>
+            ) : (
+              <ul className="appointment-list">
+                {todaysAppointments.map((appt) => (
+                  <li key={appt.id} className={`appointment-item ${appt.priority}`}>
+                    <div className="appointment-time">{appt.from} - {appt.to}</div>
+                    <div className="appointment-title">{appt.title}</div>
+                    <button 
+                      className="delete-button" 
+                      onClick={() => handleDeleteAppointment(appt.id, appt.date)}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
-          {/* Time Grid */}
-          <TimeGrid 
-            date={selectedDate}
-            appointments={appointments}
-            loading={loading}
-          />
+          {/* Right Pane: Time Grid */}
+          <div className="time-grid-panel">
+            <TimeGrid 
+              date={selectedDate}
+              appointments={appointments}
+              loading={loading}
+            />
+          </div>
         </div>
       </div>
       
