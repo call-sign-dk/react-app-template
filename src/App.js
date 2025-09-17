@@ -3,6 +3,8 @@ import Header from './components/Header';
 import TimeGrid from './components/TimeGrid';
 import AddAppointmentModal from './components/AddAppointmentModal';
 import { getAppointments, createAppointment, deleteAppointment } from './services/api';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronLeft, faChevronRight, faPlus, faCalendarAlt, faClock, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import './App.css';
 
 function App() {
@@ -11,6 +13,7 @@ function App() {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [viewMode, setViewMode] = useState('day'); // 'day' or 'week'
 
   // Format date to YYYY-MM-DD for use as object keys
   const formatDateKey = (date) => {
@@ -109,6 +112,12 @@ function App() {
     }
   };
 
+  // Format date for display
+  const formatDateDisplay = (date) => {
+    const options = { weekday: 'long', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  };
+
   // Get today's appointments
   const todayKey = formatDateKey(selectedDate);
   const todaysAppointments = appointments[todayKey] || [];
@@ -118,48 +127,108 @@ function App() {
       <Header />
       
       <div className="main-content">
-        {/* Date Navigation */}
-        <div className="date-navigation">
-          <button className="nav-button" onClick={handlePrevDate}>←</button>
-          <h2 className="current-date">{selectedDate.toDateString()}</h2>
-          <button className="nav-button" onClick={handleNextDate}>→</button>
-          <button className="add-button" onClick={() => setShowModal(true)}>+ Add Appointment</button>
+        {/* Dashboard Header */}
+        <div className="dashboard-header">
+          <div className="date-selector">
+            <button className="icon-button prev-button" onClick={handlePrevDate}>
+              <FontAwesomeIcon icon={faChevronLeft} />
+            </button>
+            <div className="current-date">
+              <FontAwesomeIcon icon={faCalendarAlt} className="date-icon" />
+              <h2>{formatDateDisplay(selectedDate)}</h2>
+            </div>
+            <button className="icon-button next-button" onClick={handleNextDate}>
+              <FontAwesomeIcon icon={faChevronRight} />
+            </button>
+          </div>
+          
+          <div className="view-controls">
+            <div className="view-toggle">
+              <button 
+                className={`toggle-button ${viewMode === 'day' ? 'active' : ''}`}
+                onClick={() => setViewMode('day')}
+              >
+                Day
+              </button>
+              <button 
+                className={`toggle-button ${viewMode === 'week' ? 'active' : ''}`}
+                onClick={() => setViewMode('week')}
+              >
+                Week
+              </button>
+            </div>
+            
+            <button className="add-appointment-button" onClick={() => setShowModal(true)}>
+              <FontAwesomeIcon icon={faPlus} />
+              <span>New Appointment</span>
+            </button>
+          </div>
         </div>
         
-        <div className="content-wrapper">
-          {/* Left Pane: Appointments List */}
+        <div className="dashboard-content">
+          {/* Left Panel: Appointments List */}
           <div className="appointments-panel">
-            <h3>Today's Appointments</h3>
-            {loading ? (
-              <div className="loading-indicator">
-                <div className="loading-spinner"></div>
-              </div>
-            ) : todaysAppointments.length === 0 ? (
-              <p className="no-appointments">No appointments scheduled</p>
-            ) : (
-              <ul className="appointment-list">
-                {todaysAppointments.map((appt) => (
-                  <li key={appt.id} className={`appointment-item ${appt.priority}`}>
-                    <div className="appointment-time">{appt.from} - {appt.to}</div>
-                    <div className="appointment-title">{appt.title}</div>
-                    <button 
-                      className="delete-button" 
-                      onClick={() => handleDeleteAppointment(appt.id, appt.date)}
-                    >
-                      ×
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <div className="panel-header">
+              <h3>
+                <FontAwesomeIcon icon={faClock} className="panel-icon" />
+                Today's Schedule
+              </h3>
+              <span className="appointment-count">
+                {todaysAppointments.length} {todaysAppointments.length === 1 ? 'appointment' : 'appointments'}
+              </span>
+            </div>
+            
+            <div className="panel-content">
+              {loading ? (
+                <div className="loading-container">
+                  <div className="loading-spinner"></div>
+                  <p>Loading appointments...</p>
+                </div>
+              ) : todaysAppointments.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">📅</div>
+                  <p>No appointments scheduled for today</p>
+                  <button className="quick-add-button" onClick={() => setShowModal(true)}>
+                    <FontAwesomeIcon icon={faPlus} />
+                    <span>Schedule Now</span>
+                  </button>
+                </div>
+              ) : (
+                <ul className="appointments-list">
+                  {todaysAppointments.map((appt) => (
+                    <li key={appt.id} className="appointment-card">
+                      <div className={`priority-indicator ${appt.priority}`}></div>
+                      <div className="appointment-details">
+                        <div className="appointment-time">
+                          <FontAwesomeIcon icon={faClock} className="time-icon" />
+                          {appt.from} - {appt.to}
+                        </div>
+                        <h4 className="appointment-title">{appt.title}</h4>
+                        {appt.description && (
+                          <p className="appointment-description">{appt.description}</p>
+                        )}
+                      </div>
+                      <button 
+                        className="delete-button" 
+                        onClick={() => handleDeleteAppointment(appt.id, appt.date)}
+                        title="Delete appointment"
+                      >
+                        <FontAwesomeIcon icon={faTrashAlt} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
-          {/* Right Pane: Time Grid */}
+          {/* Right Panel: Time Grid */}
           <div className="time-grid-panel">
             <TimeGrid 
               date={selectedDate}
               appointments={appointments}
               loading={loading}
+              viewMode={viewMode}
             />
           </div>
         </div>

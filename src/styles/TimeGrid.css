@@ -1,106 +1,293 @@
+/* Time Grid Container */
 .time-grid-container {
   height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.time-grid-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.time-grid-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-icon {
+  color: var(--primary-color);
+}
+
+.time-grid-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+/* Day Timeline */
+.day-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background-color: var(--gray-200);
+  border-radius: var(--border-radius);
   overflow: hidden;
 }
 
-.timeline {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px;
-}
-
-.hour-row {
+.timeline-hour {
   display: flex;
-  margin-bottom: 10px;
-  min-height: 60px;
+  min-height: 80px;
+  background-color: white;
 }
 
 .hour-label {
-  width: 80px;
-  padding: 10px;
-  background-color: #f8f9fa;
-  border-radius: 4px 0 0 4px;
+  width: 100px;
+  padding: 12px;
+  background-color: var(--gray-100);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 500;
-  color: #495057;
-  border: 1px solid #dee2e6;
-  border-right: none;
+  color: var(--gray-700);
+  border-right: 1px solid var(--gray-200);
 }
 
 .hour-content {
   flex: 1;
-  border: 1px solid #dee2e6;
-  border-radius: 0 4px 4px 0;
-  padding: 10px;
-  background-color: #f8f9fa;
+  position: relative;
+  padding: 4px;
 }
 
-.hour-appointment {
-  padding: 10px;
-  border-radius: 4px;
+.empty-slot {
+  height: 100%;
+}
+
+.timeline-appointment {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  border-radius: 6px;
   color: white;
-  margin-bottom: 5px;
+  padding: 8px;
+  overflow: hidden;
+  z-index: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
 }
 
-.hour-appointment:last-child {
-  margin-bottom: 0;
+.timeline-appointment:hover {
+  transform: scale(1.02);
+  z-index: 2;
 }
 
-.hour-appointment.low {
-  background-color: #27ae60;
+.timeline-appointment.low {
+  background-color: var(--success-color);
 }
 
-.hour-appointment.medium {
-  background-color: #f39c12;
+.timeline-appointment.medium {
+  background-color: var(--warning-color);
 }
 
-.hour-appointment.high {
-  background-color: #e74c3c;
+.timeline-appointment.high {
+  background-color: var(--danger-color);
 }
 
-.hour-appointment-time {
-  font-weight: bold;
-  margin-bottom: 5px;
-  font-size: 0.9rem;
-}
-
-.hour-appointment-title {
-  font-size: 1rem;
-}
-
-.empty-hour {
+.appointment-content {
   height: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #adb5bd;
-  font-style: italic;
+  flex-direction: column;
 }
 
-.loading-container {
+.appointment-title {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.appointment-time {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+.info-icon {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+/* Week View */
+.week-grid {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--gray-200);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.week-header {
+  display: flex;
+  background-color: var(--gray-100);
+  border-bottom: 2px solid var(--gray-300);
+}
+
+.week-hour-label {
+  width: 100px;
+  padding: 12px;
+  background-color: var(--gray-100);
+  border-right: 1px solid var(--gray-200);
+}
+
+.week-day-header {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.week-day-header.current-day {
+  background-color: var(--primary-light);
+  color: white;
+}
+
+.week-hour-row {
+  display: flex;
+  min-height: 60px;
+}
+
+.week-cell {
+  flex: 1;
+  background-color: white;
+  border-right: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 4px;
+}
+
+.week-cell.current-day {
+  background-color: var(--gray-100);
+}
+
+.week-cell-appointments {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.week-appointment {
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: white;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.week-appointment.low {
+  background-color: var(--success-color);
+}
+
+.week-appointment.medium {
+  background-color: var(--warning-color);
+}
+
+.week-appointment.high {
+  background-color: var(--danger-color);
+}
+
+.week-appointment-title {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.empty-cell {
+  height: 100%;
+}
+
+/* Loading State */
+.time-grid-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #6c757d;
+  color: var(--gray-600);
 }
 
 .loading-spinner {
-  border: 4px solid rgba(0, 0, 0, 0.1);
+  border: 3px solid var(--gray-200);
   border-radius: 50%;
-  border-top: 4px solid #3498db;
+  border-top: 3px solid var(--primary-color);
   width: 30px;
   height: 30px;
   animation: spin 1s linear infinite;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .hour-label, .week-hour-label {
+    width: 70px;
+    font-size: 0.85rem;
+  }
+  
+  .timeline-hour {
+    min-height: 70px;
+  }
+  
+  .week-day-header {
+    padding: 8px 4px;
+    font-size: 0.85rem;
+  }
+  
+  .week-hour-row {
+    min-height: 50px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hour-label, .week-hour-label {
+    width: 60px;
+    padding: 8px 4px;
+    font-size: 0.75rem;
+  }
+  
+  .timeline-hour {
+    min-height: 60px;
+  }
+  
+  .timeline-appointment {
+    left: 4px;
+    right: 4px;
+    padding: 4px;
+  }
+  
+  .appointment-title {
+    font-size: 0.85rem;
+  }
+  
+  .appointment-time {
+    font-size: 0.7rem;
+  }
+  
+  .week-view {
+    display: none; /* Hide week view on very small screens */
+  }
 }

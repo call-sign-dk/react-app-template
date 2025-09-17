@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import '../styles/AddAppointmentModal.css';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes, faExclamationTriangle, faClock } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faCalendarAlt, faClock, faTag, faAlignLeft, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import '../styles/AddAppointmentModal.css';
+import CustomTimePicker from './CustomTimePicker';
 
 function AddAppointmentModal({ onClose, onSave, defaultDate }) {
   const [mode, setMode] = useState('today'); // 'today' or 'later'
@@ -18,10 +19,6 @@ function AddAppointmentModal({ onClose, onSave, defaultDate }) {
     from: false,
     to: false
   });
-  
-  // Refs for the time inputs
-  const fromInputRef = useRef(null);
-  const toInputRef = useRef(null);
 
   // Validate time whenever from or to changes
   useEffect(() => {
@@ -77,54 +74,24 @@ function AddAppointmentModal({ onClose, onSave, defaultDate }) {
     };
 
     onSave(appointment);
-    onClose();
-  };
-
-  // Handle start time change
-  const handleFromChange = (e) => {
-    const value = e.target.value;
-    setFrom(value);
-    
-    // Clear any previous end time if it's now invalid
-    if (to && parseTime(to) <= parseTime(value)) {
-      setTo('');
-    }
-    
-    // Force blur to close the dropdown
-    setTimeout(() => {
-      e.target.blur();
-      
-      // If end time is empty, focus it next
-      if (!to && toInputRef.current) {
-        toInputRef.current.focus();
-      }
-    }, 100);
-  };
-
-  // Handle end time change
-  const handleToChange = (e) => {
-    const value = e.target.value;
-    setTo(value);
-    
-    // Force blur to close the dropdown
-    setTimeout(() => {
-      e.target.blur();
-    }, 100);
   };
 
   return (
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal">
+      <div className="modal-container">
         <div className="modal-header">
-          <h2>New Appointment</h2>
+          <h2>
+            <FontAwesomeIcon icon={faCalendarAlt} className="modal-icon" />
+            New Appointment
+          </h2>
           <button className="close-button" onClick={onClose}>
             <FontAwesomeIcon icon={faTimes} />
           </button>
         </div>
 
-        <div className="modal-section button-row">
+        <div className="modal-tabs">
           <button
-            className={mode === 'today' ? 'active' : ''}
+            className={`tab-button ${mode === 'today' ? 'active' : ''}`}
             onClick={() => {
               setMode('today');
               setDate(defaultDate.toISOString().substring(0, 10));
@@ -133,115 +100,149 @@ function AddAppointmentModal({ onClose, onSave, defaultDate }) {
             Schedule Today
           </button>
           <button
-            className={mode === 'later' ? 'active' : ''}
+            className={`tab-button ${mode === 'later' ? 'active' : ''}`}
             onClick={() => setMode('later')}
           >
             Schedule Later
           </button>
         </div>
 
-        <div className="form-group">
-          <label>Date</label>
-          {mode === 'today' ? (
-            <input type="text" value={date} readOnly disabled />
-          ) : (
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
+        <div className="modal-body">
+          <div className="form-group">
+            <label className="form-label">
+              <FontAwesomeIcon icon={faCalendarAlt} className="field-icon" />
+              Date <span className="required">*</span>
+            </label>
+            {mode === 'today' ? (
+              <div className="date-display">{new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+            ) : (
+              <input
+                type="date"
+                className="form-input"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+            )}
+          </div>
+
+          <div className="time-inputs">
+            <div className="form-group">
+              <CustomTimePicker
+                value={from}
+                onChange={setFrom}
+                disabled={false}
+                label="Start Time"
+                isStart={true}
+              />
+              {formErrors.from && <div className="error-message">Start time is required</div>}
+            </div>
+
+            <div className="form-group">
+              <CustomTimePicker
+                value={to}
+                onChange={setTo}
+                disabled={!from}
+                label="End Time"
+                isStart={false}
+              />
+              {formErrors.to && <div className="error-message">End time is required</div>}
+            </div>
+          </div>
+
+          {timeError && (
+            <div className="time-error">
+              <FontAwesomeIcon icon={faExclamationTriangle} /> {timeError}
+            </div>
           )}
-        </div>
 
-        <div className="time-inputs-container">
-          <div className="form-group time-input">
-            <label className="time-label">
-              <FontAwesomeIcon icon={faClock} className="time-icon" />
-              Start Time <span className="required">*</span>
+          {duration > 0 && (
+            <div className="duration-display">
+              <FontAwesomeIcon icon={faClock} className="duration-icon" />
+              Duration: {Math.floor(duration / 60)}h {duration % 60}m
+            </div>
+          )}
+
+          <div className="form-group">
+            <label className="form-label">
+              <FontAwesomeIcon icon={faTag} className="field-icon" />
+              Title <span className="required">*</span>
             </label>
             <input
-              ref={fromInputRef}
-              type="time"
-              value={from}
-              onChange={handleFromChange}
-              className={formErrors.from ? 'error' : ''}
+              type="text"
+              className={`form-input ${formErrors.title ? 'error' : ''}`}
+              placeholder="e.g., Team Meeting"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
             />
-            {formErrors.from && <div className="error-message">Start time is required</div>}
+            {formErrors.title && <div className="error-message">Title is required</div>}
           </div>
 
-          <div className="form-group time-input">
-            <label className="time-label">
-              <FontAwesomeIcon icon={faClock} className="time-icon" />
-              End Time <span className="required">*</span>
+          <div className="form-group">
+            <label className="form-label">
+              <FontAwesomeIcon icon={faAlignLeft} className="field-icon" />
+              Description <span className="required">*</span>
             </label>
-            <input
-              ref={toInputRef}
-              type="time"
-              value={to}
-              onChange={handleToChange}
-              disabled={!from}
-              className={formErrors.to ? 'error' : ''}
+            <textarea
+              className={`form-textarea ${formErrors.desc ? 'error' : ''}`}
+              placeholder="Add details about your appointment"
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
+              rows={4}
             />
-            {formErrors.to && <div className="error-message">End time is required</div>}
+            {formErrors.desc && <div className="error-message">Description is required</div>}
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Priority</label>
+            <div className="priority-options">
+              <label className={`priority-option ${priority === 'low' ? 'selected' : ''}`}>
+                <input
+                  type="radio"
+                  name="priority"
+                  value="low"
+                  checked={priority === 'low'}
+                  onChange={() => setPriority('low')}
+                />
+                <span className="priority-color low"></span>
+                <span>Low</span>
+              </label>
+              
+              <label className={`priority-option ${priority === 'medium' ? 'selected' : ''}`}>
+                <input
+                  type="radio"
+                  name="priority"
+                  value="medium"
+                  checked={priority === 'medium'}
+                  onChange={() => setPriority('medium')}
+                />
+                <span className="priority-color medium"></span>
+                <span>Medium</span>
+              </label>
+              
+              <label className={`priority-option ${priority === 'high' ? 'selected' : ''}`}>
+                <input
+                  type="radio"
+                  name="priority"
+                  value="high"
+                  checked={priority === 'high'}
+                  onChange={() => setPriority('high')}
+                />
+                <span className="priority-color high"></span>
+                <span>High</span>
+              </label>
+            </div>
           </div>
         </div>
 
-        {timeError && (
-          <div className="error-message time-error">
-            <FontAwesomeIcon icon={faExclamationTriangle} /> {timeError}
-          </div>
-        )}
-
-        {duration > 0 && (
-          <div className="duration-display">
-            Duration: {Math.floor(duration / 60)}h {duration % 60}m
-          </div>
-        )}
-
-        <div className="form-group">
-          <label>Title <span className="required">*</span></label>
-          <input
-            type="text"
-            placeholder="e.g., Team Meeting"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className={formErrors.title ? 'error' : ''}
-          />
-          {formErrors.title && <div className="error-message">Title is required</div>}
-        </div>
-
-        <div className="form-group">
-          <label>Description <span className="required">*</span></label>
-          <textarea
-            placeholder="Add details about your appointment"
-            value={desc}
-            onChange={(e) => setDesc(e.target.value)}
-            className={formErrors.desc ? 'error' : ''}
-          />
-          {formErrors.desc && <div className="error-message">Description is required</div>}
-        </div>
-
-        <div className="form-group">
-          <label>Priority</label>
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-          >
-            <option value="low">Low (Green)</option>
-            <option value="medium">Medium (Orange)</option>
-            <option value="high">High (Red)</option>
-          </select>
-        </div>
-
-        <div className="modal-actions">
+        <div className="modal-footer">
+          <button className="cancel-button" onClick={onClose}>Cancel</button>
           <button 
+            className={`save-button ${timeError ? 'disabled' : ''}`}
             onClick={handleSave}
-            disabled={timeError !== ''}
-            className={timeError ? 'disabled' : ''}
+            disabled={!!timeError}
           >
             Book Appointment
           </button>
-          <button onClick={onClose} className="cancel-button">Cancel</button>
         </div>
       </div>
     </div>
