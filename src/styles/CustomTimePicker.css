@@ -1,0 +1,113 @@
+.custom-time-picker {
+  margin-bottom: 15px;
+}
+
+.time-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #34495e;
+}
+
+.time-label.start-time {
+  color: #27ae60;
+}
+
+.time-label.end-time {
+  color: #e74c3c;
+}
+
+.required {
+  color: #e74c3c;
+  margin-left: 4px;
+}
+
+.time-input-container {
+  position: relative;
+}
+
+.time-input {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.time-input:hover {
+  border-color: #3498db;
+}
+
+.time-input.disabled {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+  color: #95a5a6;
+}
+
+.dropdown-icon {
+  color: #7f8c8d;
+}
+
+.time-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 5px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  overflow: hidden;
+}
+
+.time-dropdown-header {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.time-dropdown-header button {
+  flex: 1;
+  padding: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.time-dropdown-header button.active {
+  background: #f8f9fa;
+  color: #3498db;
+}
+
+.time-options {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.hour-grid, .minute-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1px;
+  background: #f0f0f0;
+}
+
+.hour-grid button, .minute-grid button {
+  padding: 10px 0;
+  border: none;
+  background: white;
+  cursor: pointer;
+}
+
+.hour-grid button:hover, .minute-grid button:hover {
+  background: #f8f9fa;
+}
+
+.hour-grid button.selected, .minute-grid button.selected {
+  background: #3498db;
+  color: white;
+}

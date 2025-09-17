@@ -12,7 +12,7 @@ function TimeGrid({ date, appointments }) {
     day: 'numeric'
   });
   
-  // Create 24 hour slots (will be displayed in a 6x4 grid)
+  // Create 24 hour slots
   const hours = Array.from({ length: 24 }, (_, i) => i);
   
   // Helper function to parse time string to minutes
@@ -34,7 +34,7 @@ function TimeGrid({ date, appointments }) {
         <h2>{formattedDate}</h2>
       </div>
       
-      <div className="time-grid">
+      <div className="timeline-view">
         {hours.map(hour => {
           // Find appointments that overlap with this hour
           const hourAppointments = todaysAppointments.filter(appointment => {
@@ -52,41 +52,50 @@ function TimeGrid({ date, appointments }) {
           });
           
           return (
-            <div key={hour} className="time-slot">
-              <div className="time-label">
+            <div key={hour} className="timeline-hour">
+              <div className="hour-label">
                 {hour.toString().padStart(2, '0')}:00
               </div>
-              <div className="slot-content">
-                {hourAppointments.map((appointment, index) => {
-                  const startMinutes = parseTime(appointment.from);
-                  const endMinutes = parseTime(appointment.to);
-                  const hourStartMinutes = hour * 60;
-                  const hourEndMinutes = (hour + 1) * 60;
-                  
-                  // Calculate position and height within the slot
-                  const start = Math.max(startMinutes, hourStartMinutes);
-                  const end = Math.min(endMinutes, hourEndMinutes);
-                  const startPercent = ((start - hourStartMinutes) / 60) * 100;
-                  const heightPercent = ((end - start) / 60) * 100;
-                  
-                  return (
-                    <div 
-                      key={index}
-                      className={`appointment-block ${appointment.priority}`}
-                      style={{
-                        top: `${startPercent}%`,
-                        height: `${heightPercent}%`
-                      }}
-                      title={`${appointment.title} (${appointment.from}-${appointment.to})`}
-                    >
-                      <div className="appointment-info">
-                        <span className="appointment-title">{appointment.title}</span>
-                        <span className="appointment-time">{appointment.from}-{appointment.to}</span>
-                        <FontAwesomeIcon icon={faInfoCircle} className="info-icon" />
+              <div className="hour-content">
+                {hourAppointments.length === 0 ? (
+                  <div className="empty-slot"></div>
+                ) : (
+                  hourAppointments.map((appointment, index) => {
+                    const startMinutes = parseTime(appointment.from);
+                    const endMinutes = parseTime(appointment.to);
+                    const hourStartMinutes = hour * 60;
+                    const hourEndMinutes = (hour + 1) * 60;
+                    
+                    // Calculate position and height within the hour
+                    const start = Math.max(startMinutes, hourStartMinutes);
+                    const end = Math.min(endMinutes, hourEndMinutes);
+                    const startPercent = ((start - hourStartMinutes) / 60) * 100;
+                    const heightPercent = ((end - start) / 60) * 100;
+                    
+                    // Only show appointment details if it starts in this hour
+                    const showDetails = startMinutes >= hourStartMinutes && startMinutes < hourEndMinutes;
+                    
+                    return (
+                      <div 
+                        key={index}
+                        className={`appointment-block ${appointment.priority}`}
+                        style={{
+                          top: `${startPercent}%`,
+                          height: `${heightPercent}%`
+                        }}
+                        title={`${appointment.title} (${appointment.from}-${appointment.to})`}
+                      >
+                        {showDetails && (
+                          <div className="appointment-info">
+                            <span className="appointment-title">{appointment.title}</span>
+                            <span className="appointment-time">{appointment.from}-{appointment.to}</span>
+                            <FontAwesomeIcon icon={faInfoCircle} className="info-icon" />
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
           );
