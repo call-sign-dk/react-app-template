@@ -3,7 +3,7 @@ import '../styles/TimeGrid.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 
-function TimeGrid({ date, appointments }) {
+function TimeGrid({ date, appointments, loading }) {
   // Format date to display full day, date, month, year
   const formattedDate = date.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -27,6 +27,20 @@ function TimeGrid({ date, appointments }) {
   
   // Get appointments for the selected date
   const todaysAppointments = appointments[selectedDateKey] || [];
+
+  if (loading) {
+    return (
+      <div className="time-grid-container">
+        <div className="time-grid-header">
+          <h2>{formattedDate}</h2>
+        </div>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading appointments...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="time-grid-container">
