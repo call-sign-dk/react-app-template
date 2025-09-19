@@ -25,7 +25,8 @@ const formatAppointmentForApi = (appointment) => {
     title: appointment.title,
     description: appointment.description || '',
     startTime: timeToIsoString(appointment.date, appointment.from),
-    endTime: timeToIsoString(appointment.date, appointment.to)
+    endTime: timeToIsoString(appointment.date, appointment.to),
+    priority: appointment.priority || 'low' // Include priority as string
   };
 };
 
@@ -41,7 +42,7 @@ const formatAppointmentFromApi = (apiAppointment) => {
     to: `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`,
     title: apiAppointment.title,
     description: apiAppointment.description || '',
-    priority: 'low' // Default since your backend doesn't have priority
+    priority: apiAppointment.priority || 'low' // Use the priority from API
   };
 };
 
@@ -63,11 +64,25 @@ export const getAppointments = async (date) => {
 export const createAppointment = async (appointmentData) => {
   try {
     const apiAppointment = formatAppointmentForApi(appointmentData);
+    console.log('Sending to API:', apiAppointment); // Log what you're sending
     const response = await api.post('/appointment', apiAppointment);
     
     return formatAppointmentFromApi(response.data);
   } catch (error) {
     console.error('Error creating appointment:', error);
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error('Response data:', error.response.data);
+      console.error('Response status:', error.response.status);
+      console.error('Response headers:', error.response.headers);
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('No response received:', error.request);
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error('Error message:', error.message);
+    }
     throw error;
   }
 };

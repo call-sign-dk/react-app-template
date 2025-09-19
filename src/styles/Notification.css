@@ -1,76 +1,73 @@
-.notification-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 1100;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 .notification {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  min-width: 300px;
+  max-width: 400px;
+  background-color: white;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  width: 350px;
+  z-index: 1000;
+  overflow: hidden;
   animation: slide-in 0.3s ease-out;
-  background: white;
 }
 
 .notification.error {
-  border-left: 4px solid #e74c3c;
+  border-left: 4px solid var(--danger-color);
 }
 
 .notification.success {
-  border-left: 4px solid #27ae60;
+  border-left: 4px solid var(--success-color);
 }
 
 .notification.info {
-  border-left: 4px solid #3498db;
+  border-left: 4px solid var(--primary-color);
 }
 
 .notification-content {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
 }
 
 .notification-icon {
+  margin-right: 12px;
   font-size: 1.2rem;
 }
 
-.notification.error .notification-icon {
-  color: #e74c3c;
+.error .notification-icon {
+  color: var(--danger-color);
 }
 
-.notification.success .notification-icon {
-  color: #27ae60;
+.success .notification-icon {
+  color: var(--success-color);
 }
 
-.notification.info .notification-icon {
-  color: #3498db;
+.info .notification-icon {
+  color: var(--primary-color);
 }
 
 .notification p {
+  flex: 1;
   margin: 0;
-  font-size: 0.95rem;
-  color: #2c3e50;
+  color: var(--gray-800);
 }
 
 .close-notification {
+  position: absolute;
+  top: 8px;
+  right: 8px;
   background: none;
   border: none;
-  color: #7f8c8d;
+  color: var(--gray-500);
   cursor: pointer;
-  font-size: 0.9rem;
   padding: 4px;
+  font-size: 0.9rem;
+  transition: color 0.2s;
 }
 
 .close-notification:hover {
-  color: #34495e;
+  color: var(--gray-800);
 }
 
 @keyframes slide-in {
@@ -84,17 +81,11 @@
   }
 }
 
-@keyframes slide-out {
-  from {
-    transform: translateX(0);
-    opacity: 1;
+@media (max-width: 480px) {
+  .notification {
+    min-width: auto;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
   }
-  to {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-}
-
-.notification.exiting {
-  animation: slide-out 0.3s ease-in forwards;
 }

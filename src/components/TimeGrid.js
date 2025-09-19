@@ -23,8 +23,15 @@ function TimeGrid({ date, appointments, loading, viewMode = 'day' }) {
   // Get appointments for the selected date
   const todaysAppointments = appointments[selectedDateKey] || [];
   
-  // Create array of hours (8 AM to 8 PM by default)
-  const businessHours = Array.from({ length: 13 }, (_, i) => i + 8);
+  // Create array of hours (0-23) - Full 24 hours
+  const allHours = Array.from({ length: 24 }, (_, i) => i);
+  
+  // Format time in 12-hour format with AM/PM
+  const formatTime12Hour = (hour) => {
+    if (hour === 0) return '12 AM';
+    if (hour === 12) return '12 PM';
+    return hour > 12 ? `${hour - 12} PM` : `${hour} AM`;
+  };
   
   // Create array of dates for week view
   const getDatesForWeek = () => {
@@ -64,7 +71,7 @@ function TimeGrid({ date, appointments, loading, viewMode = 'day' }) {
         
         <div className="time-grid-content">
           <div className="day-timeline">
-            {businessHours.map(hour => {
+            {allHours.map(hour => {
               // Find appointments that overlap with this hour
               const hourAppointments = todaysAppointments.filter(appointment => {
                 const startMinutes = parseTime(appointment.from);
@@ -83,7 +90,7 @@ function TimeGrid({ date, appointments, loading, viewMode = 'day' }) {
               return (
                 <div key={hour} className="timeline-hour">
                   <div className="hour-label">
-                    {hour % 12 === 0 ? 12 : hour % 12}:00 {hour >= 12 ? 'PM' : 'AM'}
+                    {formatTime12Hour(hour)}
                   </div>
                   <div className="hour-content">
                     {hourAppointments.length === 0 ? (
@@ -162,11 +169,11 @@ function TimeGrid({ date, appointments, loading, viewMode = 'day' }) {
             ))}
           </div>
           
-          {/* Hour rows */}
-          {businessHours.map(hour => (
+          {/* Hour rows - all 24 hours */}
+          {allHours.map(hour => (
             <div key={hour} className="week-hour-row">
               <div className="week-hour-label">
-                {hour % 12 === 0 ? 12 : hour % 12}:00 {hour >= 12 ? 'PM' : 'AM'}
+                {formatTime12Hour(hour)}
               </div>
               
               {/* Day cells */}

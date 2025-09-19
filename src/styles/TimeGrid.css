@@ -42,7 +42,7 @@
 
 .timeline-hour {
   display: flex;
-  min-height: 80px;
+  min-height: 70px;
   background-color: white;
 }
 
@@ -162,7 +162,7 @@
 
 .week-hour-row {
   display: flex;
-  min-height: 60px;
+  min-height: 50px;
 }
 
 .week-cell {
@@ -242,6 +242,17 @@
 }
 
 /* Responsive Styles */
+@media (max-width: 1024px) {
+  .hour-label, .week-hour-label {
+    width: 80px;
+    font-size: 0.9rem;
+  }
+  
+  .timeline-hour {
+    min-height: 60px;
+  }
+}
+
 @media (max-width: 768px) {
   .hour-label, .week-hour-label {
     width: 70px;
@@ -249,7 +260,7 @@
   }
   
   .timeline-hour {
-    min-height: 70px;
+    min-height: 50px;
   }
   
   .week-day-header {
@@ -258,7 +269,7 @@
   }
   
   .week-hour-row {
-    min-height: 50px;
+    min-height: 40px;
   }
 }
 
@@ -270,7 +281,7 @@
   }
   
   .timeline-hour {
-    min-height: 60px;
+    min-height: 40px;
   }
   
   .timeline-appointment {
