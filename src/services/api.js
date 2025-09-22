@@ -13,44 +13,81 @@ const formatDateForApi = (date) => {
 };
 
 // Convert time string (HH:MM) to full ISO date string
+// This function now treats the time as local time without timezone conversion
 const timeToIsoString = (dateStr, timeStr) => {
-  const [year, month, day] = dateStr.split('-');
-  const [hours, minutes] = timeStr.split(':');
-  return new Date(year, month - 1, day, hours, minutes).toISOString();
+  // Parse the date and time components
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  
+  // Create a date string in ISO format but without timezone info
+  const isoString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00.000Z`;
+  
+  console.log(`Converting ${dateStr} ${timeStr} to ISO:`, isoString);
+  return isoString;
 };
 
 // Format appointment for API
 const formatAppointmentForApi = (appointment) => {
-  return {
+  const apiAppointment = {
     title: appointment.title,
     description: appointment.description || '',
     startTime: timeToIsoString(appointment.date, appointment.from),
     endTime: timeToIsoString(appointment.date, appointment.to),
-    priority: appointment.priority || 'low' // Include priority as string
+    priority: appointment.priority || 'low'
   };
+  
+  // Include ID if it exists in the appointment
+  if (appointment.id) {
+    apiAppointment.id = appointment.id;
+  }
+  
+  console.log('Formatting appointment for API:', {
+    input: appointment,
+    output: apiAppointment
+  });
+  
+  return apiAppointment;
 };
 
 // Format appointment from API to frontend format
 const formatAppointmentFromApi = (apiAppointment) => {
-  const startDate = new Date(apiAppointment.startTime);
-  const endDate = new Date(apiAppointment.endTime);
+  // Parse the ISO strings
+  const startTimeStr = apiAppointment.startTime;
+  const endTimeStr = apiAppointment.endTime;
   
-  return {
+  // Extract date as YYYY-MM-DD from startTime
+  const date = startTimeStr.split('T')[0];
+  
+  // Extract time as HH:MM from the ISO strings
+  const from = startTimeStr.split('T')[1].substring(0, 5);
+  const to = endTimeStr.split('T')[1].substring(0, 5);
+  
+  const formattedAppointment = {
     id: apiAppointment.id,
-    date: startDate.toISOString().split('T')[0],
-    from: `${startDate.getHours().toString().padStart(2, '0')}:${startDate.getMinutes().toString().padStart(2, '0')}`,
-    to: `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`,
+    date,
+    from,
+    to,
     title: apiAppointment.title,
     description: apiAppointment.description || '',
-    priority: apiAppointment.priority || 'low' // Use the priority from API
+    priority: apiAppointment.priority || 'low'
   };
+  
+  console.log('Formatted appointment from API:', {
+    input: apiAppointment,
+    output: formattedAppointment
+  });
+  
+  return formattedAppointment;
 };
 
 // Get appointments for a specific date
 export const getAppointments = async (date) => {
   try {
     const formattedDate = formatDateForApi(date);
+    console.log('Fetching appointments for date:', formattedDate);
+    
     const response = await api.get(`/appointment?date=${formattedDate}`);
+    console.log('API response for appointments:', response.data);
     
     // Convert API response to frontend format
     return response.data.map(formatAppointmentFromApi);
@@ -64,39 +101,37 @@ export const getAppointments = async (date) => {
 export const createAppointment = async (appointmentData) => {
   try {
     const apiAppointment = formatAppointmentForApi(appointmentData);
-    console.log('Sending to API:', apiAppointment); // Log what you're sending
+    console.log('Sending to API (create):', apiAppointment);
+    
     const response = await api.post('/appointment', apiAppointment);
+    console.log('API response for create:', response.data);
     
     return formatAppointmentFromApi(response.data);
   } catch (error) {
     console.error('Error creating appointment:', error);
     if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
       console.error('Response data:', error.response.data);
       console.error('Response status:', error.response.status);
-      console.error('Response headers:', error.response.headers);
-    } else if (error.request) {
-      // The request was made but no response was received
-      console.error('No response received:', error.request);
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      console.error('Error message:', error.message);
     }
     throw error;
   }
 };
 
-// Add this function to your existing api.js file
-
 // Update an existing appointment
 export const updateAppointment = async (id, appointmentData) => {
   try {
-    const apiAppointment = formatAppointmentForApi(appointmentData);
-    apiAppointment.id = id; // Make sure ID is included
+    // Make sure the appointment data includes the ID
+    const appointmentWithId = { ...appointmentData, id };
     
-    console.log('Updating appointment:', apiAppointment); // Log what you're sending
+    const apiAppointment = formatAppointmentForApi(appointmentWithId);
+    
+    // Double-check that ID is included
+    apiAppointment.id = id;
+    
+    console.log(`Updating appointment ${id}:`, apiAppointment);
+    
     const response = await api.put(`/appointment/${id}`, apiAppointment);
+    console.log('API response for update:', response.data);
     
     return formatAppointmentFromApi(response.data);
   } catch (error) {
@@ -104,20 +139,15 @@ export const updateAppointment = async (id, appointmentData) => {
     if (error.response) {
       console.error('Response data:', error.response.data);
       console.error('Response status:', error.response.status);
-      console.error('Response headers:', error.response.headers);
-    } else if (error.request) {
-      console.error('No response received:', error.request);
-    } else {
-      console.error('Error message:', error.message);
     }
     throw error;
   }
 };
 
-
 // Delete an appointment
 export const deleteAppointment = async (id) => {
   try {
+    console.log(`Deleting appointment ${id}`);
     await api.delete(`/appointment/${id}`);
     return true;
   } catch (error) {
