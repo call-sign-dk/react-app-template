@@ -1,10 +1,16 @@
 import React from 'react';
 import '../styles/Sidebar.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft, faChevronRight, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+import { 
+  faChevronLeft, 
+  faChevronRight, 
+  faCalendarAlt,
+  faPencilAlt,
+  faTrashAlt
+} from '@fortawesome/free-solid-svg-icons';
 import AppointmentList from './AppointmentList';
 
-function Sidebar({ date, onPrev, onNext, appointments, onSelectDate }) {
+function Sidebar({ date, onPrev, onNext, appointments, onSelectDate, onEdit, onDelete }) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const currentMonth = months[date.getMonth()];
   
@@ -76,6 +82,8 @@ function Sidebar({ date, onPrev, onNext, appointments, onSelectDate }) {
           <AppointmentList 
             appointments={appointments} 
             selectedDate={date}
+            onEdit={onEdit}
+            onDelete={onDelete}
           />
         </div>
       </div>

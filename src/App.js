@@ -3,7 +3,7 @@ import Header from './components/Header';
 import TimeGrid from './components/TimeGrid';
 import AddAppointmentModal from './components/AddAppointmentModal';
 import Notification from './components/Notification';
-import { getAppointments, createAppointment, deleteAppointment } from './services/api';
+import { getAppointments, createAppointment, updateAppointment, deleteAppointment } from './services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faChevronLeft, 
@@ -13,7 +13,8 @@ import {
   faClock, 
   faTrashAlt,
   faBars,
-  faTimes
+  faTimes,
+  faPencilAlt
 } from '@fortawesome/free-solid-svg-icons';
 import './App.css';
 
@@ -26,6 +27,7 @@ function App() {
   const [viewMode, setViewMode] = useState('day'); // 'day' or 'week'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState(null);
   const calendarRef = useRef(null);
 
   // Format date to YYYY-MM-DD for use as object keys
@@ -93,28 +95,76 @@ function App() {
     setSelectedDate(next);
   };
   
-  // Handle adding a new appointment
-  const handleAddAppointment = async (newAppt) => {
+  // Handle editing an appointment
+  const handleEditAppointment = (appointment) => {
+    setEditingAppointment(appointment);
+    setShowModal(true);
+  };
+  
+  // Handle saving an appointment (create or update)
+  const handleSaveAppointment = async (appointmentData) => {
     try {
       setLoading(true);
       
-      const createdAppointment = await createAppointment(newAppt);
+      let savedAppointment;
       
-      // Update local state
-      const dateKey = formatDateKey(newAppt.date);
-      setAppointments(prev => ({
-        ...prev,
-        [dateKey]: [...(prev[dateKey] || []), createdAppointment]
-      }));
+      if (editingAppointment) {
+        // Update existing appointment
+        savedAppointment = await updateAppointment(editingAppointment.id, appointmentData);
+        
+        // Update local state
+        const dateKey = formatDateKey(appointmentData.date);
+        setAppointments(prev => {
+          // Create a new object to avoid mutating state directly
+          const newAppointments = { ...prev };
+          
+          // If we already have appointments for this date
+          if (newAppointments[dateKey]) {
+            // Replace the updated appointment in the array
+            newAppointments[dateKey] = newAppointments[dateKey].map(appt => 
+              appt.id === savedAppointment.id ? savedAppointment : appt
+            );
+          } else {
+            // If this is a new date, create a new array
+            newAppointments[dateKey] = [savedAppointment];
+          }
+          
+          // If the appointment was moved from another date, remove it from the old date
+          if (editingAppointment.date !== appointmentData.date) {
+            const oldDateKey = formatDateKey(editingAppointment.date);
+            if (newAppointments[oldDateKey]) {
+              newAppointments[oldDateKey] = newAppointments[oldDateKey].filter(
+                appt => appt.id !== savedAppointment.id
+              );
+            }
+          }
+          
+          return newAppointments;
+        });
+        
+        showNotification('Appointment updated successfully', 'success');
+      } else {
+        // Create new appointment
+        savedAppointment = await createAppointment(appointmentData);
+        
+        // Update local state
+        const dateKey = formatDateKey(appointmentData.date);
+        setAppointments(prev => ({
+          ...prev,
+          [dateKey]: [...(prev[dateKey] || []), savedAppointment]
+        }));
+        
+        showNotification('Appointment created successfully', 'success');
+      }
       
       setShowModal(false);
-      showNotification('Appointment created successfully', 'success');
+      setEditingAppointment(null);
     } catch (error) {
       if (error.response && error.response.status === 409) {
         // Conflict error
         showNotification('Time conflict! This slot is already booked.', 'error');
       } else {
-        showNotification('Failed to add appointment. Please try again.', 'error');
+        showNotification(`Failed to ${editingAppointment ? 'update' : 'add'} appointment. Please try again.`, 'error');
       }
     } finally {
       setLoading(false);
@@ -288,7 +338,10 @@ function App() {
                   <div className="empty-state">
                     <div className="empty-icon">📅</div>
                     <p>No appointments scheduled for today</p>
-                    <button className="quick-add-button" onClick={() => setShowModal(true)}>
+                    <button className="quick-add-button" onClick={() => {
+                      setEditingAppointment(null);
+                      setShowModal(true);
+                    }}>
                       <FontAwesomeIcon icon={faPlus} />
                       <span>Schedule Now</span>
                     </button>
@@ -308,13 +361,22 @@ function App() {
                             <p className="appointment-description">{appt.description}</p>
                           )}
                         </div>
-                        <button 
-                          className="delete-button" 
-                          onClick={() => handleDeleteAppointment(appt.id, appt.date)}
-                          title="Delete appointment"
-                        >
-                          <FontAwesomeIcon icon={faTrashAlt} />
-                        </button>
+                        <div className="appointment-actions">
+                          <button 
+                            className="edit-button" 
+                            onClick={() => handleEditAppointment(appt)}
+                            title="Edit appointment"
+                          >
+                            <FontAwesomeIcon icon={faPencilAlt} />
+                          </button>
+                          <button 
+                            className="delete-button" 
+                            onClick={() => handleDeleteAppointment(appt.id, appt.date)}
+                            title="Delete appointment"
+                          >
+                            <FontAwesomeIcon icon={faTrashAlt} />
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -359,7 +421,13 @@ function App() {
               </button>
             </div>
             
-            <button className="add-appointment-button" onClick={() => setShowModal(true)}>
+            <button 
+              className="add-appointment-button" 
+              onClick={() => {
+                setEditingAppointment(null);
+                setShowModal(true);
+              }}
+            >
               <FontAwesomeIcon icon={faPlus} />
               <span>New Appointment</span>
             </button>
@@ -389,7 +457,13 @@ function App() {
                 <div className="empty-state">
                   <div className="empty-icon">📅</div>
                   <p>No appointments scheduled for today</p>
-                  <button className="quick-add-button" onClick={() => setShowModal(true)}>
+                  <button 
+                    className="quick-add-button" 
+                    onClick={() => {
+                      setEditingAppointment(null);
+                      setShowModal(true);
+                    }}
+                  >
                     <FontAwesomeIcon icon={faPlus} />
                     <span>Schedule Now</span>
                   </button>
@@ -409,13 +483,22 @@ function App() {
                           <p className="appointment-description">{appt.description}</p>
                         )}
                       </div>
-                      <button 
-                        className="delete-button" 
-                        onClick={() => handleDeleteAppointment(appt.id, appt.date)}
-                        title="Delete appointment"
-                      >
-                        <FontAwesomeIcon icon={faTrashAlt} />
-                      </button>
+                      <div className="appointment-actions">
+                        <button 
+                          className="edit-button" 
+                          onClick={() => handleEditAppointment(appt)}
+                          title="Edit appointment"
+                        >
+                          <FontAwesomeIcon icon={faPencilAlt} />
+                        </button>
+                        <button 
+                          className="delete-button" 
+                          onClick={() => handleDeleteAppointment(appt.id, appt.date)}
+                          title="Delete appointment"
+                        >
+                          <FontAwesomeIcon icon={faTrashAlt} />
+                        </button>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -430,17 +513,22 @@ function App() {
               appointments={appointments}
               loading={loading}
               viewMode={viewMode}
+              onEditAppointment={handleEditAppointment}
             />
           </div>
         </div>
       </div>
       
-      {/* Add appointment modal */}
+      {/* Appointment modal (for both add and edit) */}
       {showModal && (
         <AddAppointmentModal
           defaultDate={selectedDate}
-          onClose={() => setShowModal(false)}
-          onSave={handleAddAppointment}
+          editingAppointment={editingAppointment}
+          onClose={() => {
+            setShowModal(false);
+            setEditingAppointment(null);
+          }}
+          onSave={handleSaveAppointment}
         />
       )}
       
