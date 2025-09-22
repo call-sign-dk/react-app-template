@@ -87,6 +87,34 @@ export const createAppointment = async (appointmentData) => {
   }
 };
 
+// Add this function to your existing api.js file
+
+// Update an existing appointment
+export const updateAppointment = async (id, appointmentData) => {
+  try {
+    const apiAppointment = formatAppointmentForApi(appointmentData);
+    apiAppointment.id = id; // Make sure ID is included
+    
+    console.log('Updating appointment:', apiAppointment); // Log what you're sending
+    const response = await api.put(`/appointment/${id}`, apiAppointment);
+    
+    return formatAppointmentFromApi(response.data);
+  } catch (error) {
+    console.error('Error updating appointment:', error);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+      console.error('Response status:', error.response.status);
+      console.error('Response headers:', error.response.headers);
+    } else if (error.request) {
+      console.error('No response received:', error.request);
+    } else {
+      console.error('Error message:', error.message);
+    }
+    throw error;
+  }
+};
+
+
 // Delete an appointment
 export const deleteAppointment = async (id) => {
   try {

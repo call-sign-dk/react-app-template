@@ -4,7 +4,7 @@ import { faTimes, faCalendarAlt, faClock, faTag, faAlignLeft, faExclamationTrian
 import '../styles/AddAppointmentModal.css';
 import CustomTimePicker from './CustomTimePicker';
 
-function AddAppointmentModal({ onClose, onSave, defaultDate }) {
+function AddAppointmentModal({ onClose, onSave, defaultDate, editingAppointment = null }) {
   const [mode, setMode] = useState('today'); // 'today' or 'later'
   const [date, setDate] = useState(defaultDate.toISOString().substring(0, 10));
   const [from, setFrom] = useState('');
@@ -19,6 +19,23 @@ function AddAppointmentModal({ onClose, onSave, defaultDate }) {
     from: false,
     to: false
   });
+
+  // If we're editing, populate the form with appointment data
+  useEffect(() => {
+    if (editingAppointment) {
+      setTitle(editingAppointment.title);
+      setDesc(editingAppointment.description || '');
+      setDate(editingAppointment.date);
+      setFrom(editingAppointment.from);
+      setTo(editingAppointment.to);
+      setPriority(editingAppointment.priority || 'low');
+      
+      // If editing an appointment for a different day, switch to "later" mode
+      if (editingAppointment.date !== defaultDate.toISOString().substring(0, 10)) {
+        setMode('later');
+      }
+    }
+  }, [editingAppointment, defaultDate]);
 
   // Validate time whenever from or to changes
   useEffect(() => {
@@ -73,6 +90,11 @@ function AddAppointmentModal({ onClose, onSave, defaultDate }) {
       priority,
     };
 
+    // If editing, include the ID
+    if (editingAppointment) {
+      appointment.id = editingAppointment.id;
+    }
+
     onSave(appointment);
   };
 
@@ -82,7 +104,7 @@ function AddAppointmentModal({ onClose, onSave, defaultDate }) {
         <div className="modal-header">
           <h2>
             <FontAwesomeIcon icon={faCalendarAlt} className="modal-icon" />
-            New Appointment
+            {editingAppointment ? 'Edit Appointment' : 'New Appointment'}
           </h2>
           <button className="close-button" onClick={onClose}>
             <FontAwesomeIcon icon={faTimes} />
@@ -241,7 +263,7 @@ function AddAppointmentModal({ onClose, onSave, defaultDate }) {
             onClick={handleSave}
             disabled={!!timeError}
           >
-            Book Appointment
+            {editingAppointment ? 'Update Appointment' : 'Book Appointment'}
           </button>
         </div>
       </div>

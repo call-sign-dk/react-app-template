@@ -4,6 +4,8 @@
 
 .appointment-list ul {
   list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .appointment-item {
@@ -12,6 +14,7 @@
   border-radius: var(--border-radius);
   color: white;
   box-shadow: var(--box-shadow);
+  position: relative;
 }
 
 .appointment-time {
@@ -32,6 +35,36 @@
 .appointment-description {
   font-size: var(--font-size-small);
   opacity: 0.9;
+}
+
+.appointment-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.edit-button, .delete-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.edit-button:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.delete-button:hover {
+  background: rgba(255, 0, 0, 0.4);
 }
 
 .no-appointments {
