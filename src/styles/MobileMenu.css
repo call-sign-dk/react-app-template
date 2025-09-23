@@ -1,0 +1,218 @@
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mobile-menu {
+  width: 85%;
+  max-width: 400px;
+  height: 100%;
+  background-color: white;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.mobile-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.mobile-menu-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--gray-800);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--gray-600);
+  cursor: pointer;
+  padding: 8px;
+}
+
+.close-button:hover {
+  color: var(--gray-800);
+}
+
+.mobile-date-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background-color: var(--gray-100);
+}
+
+.nav-button {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--primary-color);
+  cursor: pointer;
+  padding: 8px;
+}
+
+.current-date {
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.view-toggle {
+  display: flex;
+  margin: 0 16px 16px;
+  background-color: var(--gray-200);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.toggle-button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.toggle-button.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.mobile-add-appointment {
+  padding: 0 16px 16px;
+}
+
+.add-button {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.add-button:hover {
+  background-color: var(--primary-dark);
+}
+
+.mobile-appointments-list {
+  flex: 1;
+  padding: 16px;
+}
+
+.mobile-appointments-list h3 {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+  color: var(--gray-700);
+}
+
+.no-appointments {
+  padding: 16px;
+  background-color: var(--gray-100);
+  border-radius: var(--border-radius);
+  text-align: center;
+  color: var(--gray-600);
+}
+
+.appointment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: var(--border-radius);
+  background-color: white;
+  border-left: 4px solid;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.appointment-item.low {
+  border-left-color: var(--success-color);
+}
+
+.appointment-item.medium {
+  border-left-color: var(--warning-color);
+}
+
+.appointment-item.high {
+  border-left-color: var(--danger-color);
+}
+
+.appointment-details {
+  flex: 1;
+  cursor: pointer;
+}
+
+.appointment-time {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-bottom: 4px;
+}
+
+.appointment-title {
+  font-weight: 500;
+  color: var(--gray-800);
+}
+
+.appointment-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-button, .delete-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.edit-button {
+  color: var(--primary-color);
+}
+
+.edit-button:hover {
+  background-color: var(--gray-100);
+}
+
+.delete-button {
+  color: var(--danger-color);
+}
+
+.delete-button:hover {
+  background-color: var(--gray-100);
+}
+
+@media (max-width: 480px) {
+  .mobile-menu {
+    width: 100%;
+    max-width: none;
+  }
+}

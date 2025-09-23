@@ -34,16 +34,19 @@
 .day-timeline {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 0;
   background-color: var(--gray-200);
   border-radius: var(--border-radius);
   overflow: hidden;
+  position: relative;
 }
 
 .timeline-hour {
   display: flex;
   min-height: 70px;
   background-color: white;
+  position: relative;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 
 .hour-label {
@@ -56,46 +59,69 @@
   font-weight: 500;
   color: var(--gray-700);
   border-right: 1px solid var(--gray-200);
+  box-sizing: border-box;
+  position: relative;
+  z-index: 10;
 }
 
 .hour-content {
   flex: 1;
   position: relative;
-  padding: 4px;
+  padding: 0;
+  z-index: 1;
 }
 
-.empty-slot {
+/*.empty-slot {
   height: 100%;
+}*/
+.timeline-appointment:hover,
+.week-appointment-overlay:hover {
+  background-color: transparent !important; /* Reset first */
 }
-
 .timeline-appointment {
   position: absolute;
-  left: 8px;
-  right: 8px;
   border-radius: 6px;
   color: white;
   padding: 8px;
   overflow: hidden;
-  z-index: 1;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 20 !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
   transition: transform 0.2s ease;
+  /*transition: all 0.2s ease;*/
+  border: 1px solid rgba(255,255,255,0.2);
+  box-sizing: border-box;
 }
 
 .timeline-appointment:hover {
   transform: scale(1.02);
-  z-index: 2;
+  z-index: 21 !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5); /* Brighter border on hover */
+  cursor: pointer;
+}
+/* Ensure hover background colors match priority */
+.timeline-appointment.low:hover {
+  background-color: var(--success-color) !important;
+}
+
+.timeline-appointment.medium:hover {
+  background-color: var(--warning-color) !important;
+}
+
+.timeline-appointment.high:hover {
+  background-color: var(--danger-color) !important;
 }
 
 .timeline-appointment.low {
-  background-color: var(--success-color);
+  background-color: var(--success-color) !important;
 }
 
 .timeline-appointment.medium {
-  background-color: var(--warning-color);
+  background-color: var(--warning-color) !important;
 }
 
 .timeline-appointment.high {
-  background-color: var(--danger-color);
+  background-color: var(--danger-color) !important;
 }
 
 .appointment-content {
@@ -114,7 +140,9 @@
 
 .appointment-time {
   font-size: 0.75rem;
-  opacity: 0.9;
+  font-weight: 600; /* Make time text semi-bold */
+  opacity: 0.95;
+  color: white; /* Ensure text is white */
 }
 
 .info-icon {
@@ -153,11 +181,21 @@
   text-align: center;
   font-weight: 600;
   color: var(--gray-700);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.week-day-header:hover {
+  background-color: var(--gray-200);
 }
 
 .week-day-header.current-day {
   background-color: var(--primary-light);
   color: white;
+}
+
+.week-day-header.current-day:hover {
+  background-color: var(--primary-dark);
 }
 
 .week-hour-row {
@@ -170,7 +208,10 @@
   background-color: white;
   border-right: 1px solid var(--gray-200);
   border-bottom: 1px solid var(--gray-200);
-  padding: 4px;
+  padding: 0;
+  position: relative; /* Add position relative */
+  box-sizing: border-box;
+   min-width: 0;
 }
 
 .week-cell.current-day {
@@ -181,6 +222,9 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  position: relative; /* Add position relative */
+  z-index: 5; /* Ensure it's above the cell background */
+  width: 100%; /* Take full width of cell */
 }
 
 .week-appointment {
@@ -191,25 +235,87 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  z-index: 10; /* Ensure it's above grid lines */
+  position: relative; /* Add position relative */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add shadow for better visibility */
+  width: 100%; /* Ensure it takes full width */
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
 .week-appointment.low {
-  background-color: var(--success-color);
+  background-color: var(--success-color) !important;
 }
 
 .week-appointment.medium {
-  background-color: var(--warning-color);
+  background-color: var(--warning-color) !important;
 }
 
 .week-appointment.high {
-  background-color: var(--danger-color);
+  background-color: var(--danger-color) !important;
 }
 
 .week-appointment-title {
   font-weight: 500;
+  width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block; /* Make it a block element */
+  max-width: 100%; /* Ensure it doesn't exceed container width */
+}
+
+/* Add these styles for the week view overlay approach */
+.week-body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.week-appointment-overlay {
+  position: absolute;
+  border-radius: 6px;
+  color: white;
+  padding: 8px;
+  overflow: hidden;
+  z-index: 20 !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+  transition: transform 0.2s ease;
+  border: 1px solid rgba(255,255,255,0.2);
+  box-sizing: border-box;
+  margin: 0 2px;
+}
+
+.week-appointment-overlay:hover {
+  transform: scale(1.02);
+  z-index: 21 !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5); /* Brighter border on hover */
+  cursor: pointer;
+}
+/* Ensure hover background colors match priority */
+.week-appointment-overlay.low:hover {
+  background-color: var(--success-color) !important;
+}
+
+.week-appointment-overlay.medium:hover {
+  background-color: var(--warning-color) !important;
+}
+
+.week-appointment-overlay.high:hover {
+  background-color: var(--danger-color) !important;
+}
+
+.week-appointment-overlay.low {
+  background-color: var(--success-color) !important;
+}
+
+.week-appointment-overlay.medium {
+  background-color: var(--warning-color) !important;
+}
+
+.week-appointment-overlay.high {
+  background-color: var(--danger-color) !important;
 }
 
 .empty-cell {
@@ -255,50 +361,65 @@
 
 @media (max-width: 768px) {
   .hour-label, .week-hour-label {
-    width: 70px;
-    font-size: 0.85rem;
+    width: 60px;
+    font-size: 0.8rem;
+    padding: 8px 4px;
   }
   
   .timeline-hour {
     min-height: 50px;
   }
   
+  /* Fix for blank space on left side in day view */
+  .timeline-appointment {
+    left: 60px !important; /* Match the hour-label width */
+  }
+  
   .week-day-header {
     padding: 8px 4px;
     font-size: 0.85rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .week-hour-row {
     min-height: 40px;
   }
+  
+  /* Hide content in week view on mobile */
+  .week-appointment-overlay .appointment-content {
+    display: none;
+  }
+  
+  /* Simplify week appointments on mobile */
+  .week-appointment-overlay {
+    padding: 0;
+    margin: 0 1px;
+    border-radius: 4px;
+    border: none;
+  }
 }
 
 @media (max-width: 480px) {
   .hour-label, .week-hour-label {
-    width: 60px;
+    width: 50px;
     padding: 8px 4px;
     font-size: 0.75rem;
+  }
+  
+  /* Update left position for smaller screens */
+  .timeline-appointment {
+    left: 50px !important; /* Match the hour-label width */
   }
   
   .timeline-hour {
     min-height: 40px;
   }
   
-  .timeline-appointment {
-    left: 4px;
-    right: 4px;
-    padding: 4px;
-  }
-  
-  .appointment-title {
-    font-size: 0.85rem;
-  }
-  
-  .appointment-time {
+  .week-day-header {
+    padding: 6px 2px;
     font-size: 0.7rem;
-  }
-  
-  .week-view {
-    display: none; /* Hide week view on very small screens */
   }
 }

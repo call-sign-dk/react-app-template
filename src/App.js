@@ -1,21 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import TimeGrid from './components/TimeGrid';
 import AddAppointmentModal from './components/AddAppointmentModal';
 import Notification from './components/Notification';
-import { getAppointments, createAppointment, updateAppointment, deleteAppointment } from './services/api';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import DashboardHeader from './components/DashboardHeader';
+import AppointmentsPanel from './components/AppointmentsPanel';
+import MobileMenu from './components/MobileMenu';
 import { 
-  faChevronLeft, 
-  faChevronRight, 
-  faPlus, 
-  faCalendarAlt, 
-  faClock, 
-  faTrashAlt,
-  faBars,
-  faTimes,
-  faPencilAlt
-} from '@fortawesome/free-solid-svg-icons';
+  getAppointments, 
+  getAppointmentsForRange, 
+  createAppointment, 
+  updateAppointment, 
+  deleteAppointment,
+  fetchSurroundingMonths
+} from './services/api';
+import { formatDateKey, formatDateDisplay } from './utils/timeUtils';
 import './App.css';
 
 function App() {
@@ -23,32 +22,59 @@ function App() {
   const [appointments, setAppointments] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const [notification, setNotification] = useState({ show: false, message: '', type: 'error' });
   const [viewMode, setViewMode] = useState('day'); // 'day' or 'week'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState(null);
-  const calendarRef = useRef(null);
+  
+  // Debug: Log when selectedDate changes
+  useEffect(() => {
+    console.log("selectedDate changed:", selectedDate);
+    console.log("selectedDate ISO:", selectedDate.toISOString());
+    console.log("selectedDate formatted:", selectedDate.toISOString().substring(0, 10));
+  }, [selectedDate]);
 
-  // Format date to YYYY-MM-DD for use as object keys
-  const formatDateKey = (date) => {
-    if (typeof date === 'string') return date;
-    return date.toISOString().substring(0, 10);
-  };
-
-  // Load appointments when selected date changes
+  // Load appointments when selected date or view mode changes
   useEffect(() => {
     const fetchAppointments = async () => {
-      const dateKey = formatDateKey(selectedDate);
-      
       try {
         setLoading(true);
-        const data = await getAppointments(selectedDate);
         
-        setAppointments(prev => ({
-          ...prev,
-          [dateKey]: data
-        }));
+        if (viewMode === 'day') {
+          // Fetch appointments for a single day
+          // This will automatically fetch the surrounding months if needed
+          const dateKey = formatDateKey(selectedDate);
+          const data = await getAppointments(selectedDate);
+          
+          setAppointments(prev => ({
+            ...prev,
+            [dateKey]: data
+          }));
+        } else if (viewMode === 'week') {
+          // Fetch appointments for the entire week
+          const startOfWeek = new Date(selectedDate);
+          startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay()); // Start from Sunday
+          
+          const endOfWeek = new Date(startOfWeek);
+          endOfWeek.setDate(startOfWeek.getDate() + 6); // End on Saturday
+          
+          // This will automatically fetch any needed months
+          const weekAppointments = await getAppointmentsForRange(startOfWeek, endOfWeek);
+          
+          // Format into the structure expected by TimeGrid
+          const formattedAppointments = {};
+          weekAppointments.forEach(appointment => {
+            const dateKey = appointment.date; // Already in YYYY-MM-DD format
+            if (!formattedAppointments[dateKey]) {
+              formattedAppointments[dateKey] = [];
+            }
+            formattedAppointments[dateKey].push(appointment);
+          });
+          
+          setAppointments(formattedAppointments);
+        }
       } catch (err) {
         showNotification('Failed to load appointments', 'error');
         console.error(err);
@@ -56,22 +82,21 @@ function App() {
         setLoading(false);
       }
     };
-
-    fetchAppointments();
-  }, [selectedDate]);
-
-  // Close calendar when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
-        setShowCalendar(false);
-      }
-    }
     
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+    fetchAppointments();
+  }, [selectedDate, viewMode]);
+
+  // Prefetch data for the current month and surrounding months on initial load
+  useEffect(() => {
+    const prefetchData = async () => {
+      try {
+        await fetchSurroundingMonths(new Date());
+      } catch (err) {
+        console.error('Error prefetching data:', err);
+      }
     };
+    
+    prefetchData();
   }, []);
 
   // Show notification
@@ -85,13 +110,21 @@ function App() {
   // Navigation functions
   const handlePrevDate = () => {
     const prev = new Date(selectedDate);
-    prev.setDate(prev.getDate() - 1);
+    if (viewMode === 'day') {
+      prev.setDate(prev.getDate() - 1);
+    } else {
+      prev.setDate(prev.getDate() - 7); // Move back a week
+    }
     setSelectedDate(prev);
   };
 
-  const handleNextDate = () => {
+    const handleNextDate = () => {
     const next = new Date(selectedDate);
-    next.setDate(next.getDate() + 1);
+    if (viewMode === 'day') {
+      next.setDate(next.getDate() + 1);
+    } else {
+      next.setDate(next.getDate() + 7); // Move forward a week
+    }
     setSelectedDate(next);
   };
   
@@ -121,7 +154,7 @@ function App() {
           // If we already have appointments for this date
           if (newAppointments[dateKey]) {
             // Replace the updated appointment in the array
-            newAppointments[dateKey] = newAppointments[dateKey].map(appt => 
+            newAppointments[dateKey] = newAppointments[dateKey].map(appt =>
               appt.id === savedAppointment.id ? savedAppointment : appt
             );
           } else {
@@ -191,96 +224,16 @@ function App() {
       setLoading(false);
     }
   };
-
-  // Format date for display
-  const formatDateDisplay = (date) => {
-    const options = { weekday: 'long', month: 'long', day: 'numeric' };
-    return date.toLocaleDateString('en-US', options);
-  };
-
-  // Calendar functions
-  const handleDateSelect = (date) => {
-    setSelectedDate(date);
-    setShowCalendar(false);
-  };
-
-  const renderCalendar = () => {
-    const currentMonth = selectedDate.getMonth();
-    const currentYear = selectedDate.getFullYear();
-    
-    // Get first day of month and number of days
-    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    
-    // Create array of days
-    const days = [];
-    for (let i = 0; i < firstDay; i++) {
-      days.push(null); // Empty cells for days before month starts
-    }
-    
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(i);
-    }
-    
-    // Month names
-    const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    
-    return (
-      <div className="calendar-dropdown-container" ref={calendarRef}>
-        <div className="calendar-header">
-          <button onClick={() => {
-            const newDate = new Date(selectedDate);
-            newDate.setMonth(newDate.getMonth() - 1);
-            setSelectedDate(newDate);
-          }}>
-            <FontAwesomeIcon icon={faChevronLeft} />
-          </button>
-          <div>
-            {months[currentMonth]} {currentYear}
-          </div>
-          <button onClick={() => {
-            const newDate = new Date(selectedDate);
-            newDate.setMonth(newDate.getMonth() + 1);
-            setSelectedDate(newDate);
-          }}>
-            <FontAwesomeIcon icon={faChevronRight} />
-          </button>
-        </div>
-        <div className="calendar-days-header">
-          <div>Su</div>
-          <div>Mo</div>
-          <div>Tu</div>
-          <div>We</div>
-          <div>Th</div>
-          <div>Fr</div>
-          <div>Sa</div>
-        </div>
-        <div className="calendar-days">
-          {days.map((day, index) => {
-            if (day === null) {
-              return <div key={`empty-${index}`} className="empty-day"></div>;
-            }
-            
-            const date = new Date(currentYear, currentMonth, day);
-            const isToday = new Date().toDateString() === date.toDateString();
-            const isSelected = selectedDate.toDateString() === date.toDateString();
-            
-            return (
-              <div 
-                key={`day-${day}`}
-                className={`calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`}
-                onClick={() => handleDateSelect(date)}
-              >
-                {day}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
+ // Add this function to handle day selection in week view
+const handleDateSelect = (date) => {
+  setSelectedDate(date);
+};
+  // Function to handle opening the modal with debug logs
+  const handleOpenModal = () => {
+    console.log("handleOpenModal called, selectedDate:", selectedDate);
+    console.log("selectedDate formatted:", selectedDate.toISOString().substring(0, 10));
+    setEditingAppointment(null);
+    setShowModal(true);
   };
 
   // Get today's appointments
@@ -289,233 +242,61 @@ function App() {
 
   return (
     <div className="app-container">
-      <Header 
-        onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)} 
+      <Header
+        onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
         isMobileMenuOpen={mobileMenuOpen}
       />
       
       <div className="main-content">
         {/* Mobile Menu */}
-        <div className={`mobile-menu ${mobileMenuOpen ? 'open' : ''}`}>
-          <div className="mobile-menu-header">
-            <button className="close-menu-button" onClick={() => setMobileMenuOpen(false)}>
-              <FontAwesomeIcon icon={faTimes} />
-            </button>
-          </div>
-          
-          <div className="mobile-menu-content">
-            <div className="mobile-date-selector">
-              <button className="icon-button prev-button" onClick={handlePrevDate}>
-                <FontAwesomeIcon icon={faChevronLeft} />
-              </button>
-              <div className="current-date">
-                <FontAwesomeIcon icon={faCalendarAlt} className="date-icon" />
-                <h2>{formatDateDisplay(selectedDate)}</h2>
-              </div>
-              <button className="icon-button next-button" onClick={handleNextDate}>
-                <FontAwesomeIcon icon={faChevronRight} />
-              </button>
-            </div>
-            
-            <div className="mobile-appointments-panel">
-              <div className="panel-header">
-                <h3>
-                  <FontAwesomeIcon icon={faClock} className="panel-icon" />
-                  Today's Schedule
-                </h3>
-                <span className="appointment-count">
-                  {todaysAppointments.length} {todaysAppointments.length === 1 ? 'appointment' : 'appointments'}
-                </span>
-              </div>
-              
-              <div className="panel-content">
-                {loading ? (
-                  <div className="loading-container">
-                    <div className="loading-spinner"></div>
-                    <p>Loading appointments...</p>
-                  </div>
-                ) : todaysAppointments.length === 0 ? (
-                  <div className="empty-state">
-                    <div className="empty-icon">📅</div>
-                    <p>No appointments scheduled for today</p>
-                    <button className="quick-add-button" onClick={() => {
-                      setEditingAppointment(null);
-                      setShowModal(true);
-                    }}>
-                      <FontAwesomeIcon icon={faPlus} />
-                      <span>Schedule Now</span>
-                    </button>
-                  </div>
-                ) : (
-                  <ul className="appointments-list">
-                    {todaysAppointments.map((appt) => (
-                      <li key={appt.id} className="appointment-card">
-                        <div className={`priority-indicator ${appt.priority}`}></div>
-                        <div className="appointment-details">
-                          <div className="appointment-time">
-                            <FontAwesomeIcon icon={faClock} className="time-icon" />
-                            {appt.from} - {appt.to}
-                          </div>
-                          <h4 className="appointment-title">{appt.title}</h4>
-                          {appt.description && (
-                            <p className="appointment-description">{appt.description}</p>
-                          )}
-                        </div>
-                        <div className="appointment-actions">
-                          <button 
-                            className="edit-button" 
-                            onClick={() => handleEditAppointment(appt)}
-                            title="Edit appointment"
-                          >
-                            <FontAwesomeIcon icon={faPencilAlt} />
-                          </button>
-                          <button 
-                            className="delete-button" 
-                            onClick={() => handleDeleteAppointment(appt.id, appt.date)}
-                            title="Delete appointment"
-                          >
-                            <FontAwesomeIcon icon={faTrashAlt} />
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        <MobileMenu
+          isOpen={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+          selectedDate={selectedDate}
+          onPrevDate={handlePrevDate}
+          onNextDate={handleNextDate}
+          appointments={todaysAppointments}
+          onAddAppointment={handleOpenModal}
+          onEditAppointment={handleEditAppointment}
+          onDeleteAppointment={handleDeleteAppointment}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        />
         
         {/* Dashboard Header */}
-        <div className="dashboard-header">
-          <div className="date-selector">
-            <button className="icon-button prev-button" onClick={handlePrevDate}>
-              <FontAwesomeIcon icon={faChevronLeft} />
-            </button>
-            <div className="current-date">
-              <div className="calendar-button" onClick={() => setShowCalendar(!showCalendar)}>
-                <FontAwesomeIcon icon={faCalendarAlt} className="date-icon" />
-                <h2>{formatDateDisplay(selectedDate)}</h2>
-                <FontAwesomeIcon icon={showCalendar ? faChevronLeft : faChevronRight} className="calendar-toggle-icon" />
-              </div>
-              {showCalendar && renderCalendar()}
-            </div>
-            <button className="icon-button next-button" onClick={handleNextDate}>
-              <FontAwesomeIcon icon={faChevronRight} />
-            </button>
-          </div>
-          
-          <div className="view-controls">
-            <div className="view-toggle">
-              <button 
-                className={`toggle-button ${viewMode === 'day' ? 'active' : ''}`}
-                onClick={() => setViewMode('day')}
-              >
-                Day
-              </button>
-              <button 
-                className={`toggle-button ${viewMode === 'week' ? 'active' : ''}`}
-                onClick={() => setViewMode('week')}
-              >
-                Week
-              </button>
-            </div>
-            
-            <button 
-              className="add-appointment-button" 
-              onClick={() => {
-                setEditingAppointment(null);
-                setShowModal(true);
-              }}
-            >
-              <FontAwesomeIcon icon={faPlus} />
-              <span>New Appointment</span>
-            </button>
-          </div>
-        </div>
+        <DashboardHeader
+          selectedDate={selectedDate}
+          onPrevDate={handlePrevDate}
+          onNextDate={handleNextDate}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onAddAppointment={handleOpenModal}
+          showCalendar={showCalendar}
+          setShowCalendar={setShowCalendar}
+          setSelectedDate={setSelectedDate}
+        />
         
         <div className="dashboard-content">
           {/* Left Panel: Appointments List */}
-          <div className="appointments-panel">
-            <div className="panel-header">
-              <h3>
-                <FontAwesomeIcon icon={faClock} className="panel-icon" />
-                Today's Schedule
-              </h3>
-              <span className="appointment-count">
-                {todaysAppointments.length} {todaysAppointments.length === 1 ? 'appointment' : 'appointments'}
-              </span>
-            </div>
-            
-            <div className="panel-content">
-              {loading ? (
-                <div className="loading-container">
-                  <div className="loading-spinner"></div>
-                  <p>Loading appointments...</p>
-                </div>
-              ) : todaysAppointments.length === 0 ? (
-                <div className="empty-state">
-                  <div className="empty-icon">📅</div>
-                  <p>No appointments scheduled for today</p>
-                  <button 
-                    className="quick-add-button" 
-                    onClick={() => {
-                      setEditingAppointment(null);
-                      setShowModal(true);
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faPlus} />
-                    <span>Schedule Now</span>
-                  </button>
-                </div>
-              ) : (
-                <ul className="appointments-list">
-                  {todaysAppointments.map((appt) => (
-                    <li key={appt.id} className="appointment-card">
-                      <div className={`priority-indicator ${appt.priority}`}></div>
-                      <div className="appointment-details">
-                        <div className="appointment-time">
-                          <FontAwesomeIcon icon={faClock} className="time-icon" />
-                          {appt.from} - {appt.to}
-                        </div>
-                        <h4 className="appointment-title">{appt.title}</h4>
-                        {appt.description && (
-                          <p className="appointment-description">{appt.description}</p>
-                        )}
-                      </div>
-                      <div className="appointment-actions">
-                        <button 
-                          className="edit-button" 
-                          onClick={() => handleEditAppointment(appt)}
-                          title="Edit appointment"
-                        >
-                          <FontAwesomeIcon icon={faPencilAlt} />
-                        </button>
-                        <button 
-                          className="delete-button" 
-                          onClick={() => handleDeleteAppointment(appt.id, appt.date)}
-                          title="Delete appointment"
-                        >
-                          <FontAwesomeIcon icon={faTrashAlt} />
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-
+          <AppointmentsPanel
+            appointments={todaysAppointments}
+            onAddAppointment={handleOpenModal}
+            onEditAppointment={handleEditAppointment}
+            onDeleteAppointment={handleDeleteAppointment}
+            loading={loading}
+          />
           {/* Right Panel: Time Grid */}
-          <div className="time-grid-panel">
-            <TimeGrid 
-              date={selectedDate}
-              appointments={appointments}
-              loading={loading}
-              viewMode={viewMode}
-              onEditAppointment={handleEditAppointment}
-            />
-          </div>
+<div className="time-grid-panel">
+  <TimeGrid
+    date={selectedDate}
+    appointments={appointments}
+    loading={loading}
+    viewMode={viewMode}
+    onEditAppointment={handleEditAppointment}
+    onDateSelect={handleDateSelect}
+  />
+</div>
+
         </div>
       </div>
       
@@ -525,6 +306,7 @@ function App() {
           defaultDate={selectedDate}
           editingAppointment={editingAppointment}
           onClose={() => {
+            console.log("Modal closing");
             setShowModal(false);
             setEditingAppointment(null);
           }}
@@ -534,10 +316,10 @@ function App() {
       
       {/* Notification component */}
       {notification.show && (
-        <Notification 
-          message={notification.message} 
-          type={notification.type} 
-          onClose={() => setNotification({ ...notification, show: false })} 
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification({ ...notification, show: false })}
         />
       )}
     </div>
@@ -545,3 +327,4 @@ function App() {
 }
 
 export default App;
+
