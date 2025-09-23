@@ -87,15 +87,15 @@
 }
 
 .timeline-appointment.low {
-  background-color: var(--success-color);
+  background-color: var(--success-color) !important;
 }
 
 .timeline-appointment.medium {
-  background-color: var(--warning-color);
+  background-color: var(--warning-color) !important;
 }
 
 .timeline-appointment.high {
-  background-color: var(--danger-color);
+  background-color: var(--danger-color) !important;
 }
 
 .appointment-content {
@@ -194,15 +194,15 @@
 }
 
 .week-appointment.low {
-  background-color: var(--success-color);
+  background-color: var(--success-color) !important;
 }
 
 .week-appointment.medium {
-  background-color: var(--warning-color);
+  background-color: var(--warning-color) !important;
 }
 
 .week-appointment.high {
-  background-color: var(--danger-color);
+  background-color: var(--danger-color) !important;
 }
 
 .week-appointment-title {
@@ -297,7 +297,30 @@
   .appointment-time {
     font-size: 0.7rem;
   }
-  
+  /* Add this to your TimeGrid.css */
+.timeline-hour {
+  position: relative;
+}
+
+.timeline-appointment {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  border-radius: 6px;
+  color: white;
+  padding: 8px;
+  overflow: hidden;
+  z-index: 5; /* Increased z-index to ensure it's above hour dividers */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+/* This will hide the hour dividers behind appointments */
+.hour-content {
+  position: relative;
+  z-index: 1;
+}
+
   .week-view {
     display: none; /* Hide week view on very small screens */
   }
