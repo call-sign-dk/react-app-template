@@ -34,7 +34,7 @@
 .day-timeline {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 0;
   background-color: var(--gray-200);
   border-radius: var(--border-radius);
   overflow: hidden;
@@ -44,6 +44,8 @@
   display: flex;
   min-height: 70px;
   background-color: white;
+  position: relative;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 
 .hour-label {
@@ -62,6 +64,7 @@
   flex: 1;
   position: relative;
   padding: 4px;
+  z-index: 1;
 }
 
 .empty-slot {
@@ -76,14 +79,15 @@
   color: white;
   padding: 8px;
   overflow: hidden;
-  z-index: 1;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 20 !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
   transition: transform 0.2s ease;
+  border: 1px solid rgba(255,255,255,0.2);
 }
 
 .timeline-appointment:hover {
   transform: scale(1.02);
-  z-index: 2;
+  z-index: 21 !important;
 }
 
 .timeline-appointment.low {
@@ -114,7 +118,9 @@
 
 .appointment-time {
   font-size: 0.75rem;
-  opacity: 0.9;
+  font-weight: 600; /* Make time text semi-bold */
+  opacity: 0.95;
+  color: white; /* Ensure text is white */
 }
 
 .info-icon {
@@ -171,6 +177,8 @@
   border-right: 1px solid var(--gray-200);
   border-bottom: 1px solid var(--gray-200);
   padding: 4px;
+  position: relative; /* Add position relative */
+   min-width: 0;
 }
 
 .week-cell.current-day {
@@ -181,6 +189,9 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  position: relative; /* Add position relative */
+  z-index: 5; /* Ensure it's above the cell background */
+  width: 100%; /* Take full width of cell */
 }
 
 .week-appointment {
@@ -191,6 +202,11 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  z-index: 10; /* Ensure it's above grid lines */
+  position: relative; /* Add position relative */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add shadow for better visibility */
+  width: 100%; /* Ensure it takes full width */
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
 .week-appointment.low {
@@ -207,9 +223,13 @@
 
 .week-appointment-title {
   font-weight: 500;
+  width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block; /* Make it a block element */
+  max-width: 100%; /* Ensure it doesn't exceed container width */
 }
 
 .empty-cell {
@@ -317,7 +337,9 @@
 
 /* This will hide the hour dividers behind appointments */
 .hour-content {
+  flex: 1;
   position: relative;
+  padding: 4px;
   z-index: 1;
 }
 
