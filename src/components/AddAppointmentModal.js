@@ -5,8 +5,21 @@ import '../styles/AddAppointmentModal.css';
 import CustomTimePicker from './CustomTimePicker';
 
 function AddAppointmentModal({ onClose, onSave, defaultDate, editingAppointment = null }) {
-  const [mode, setMode] = useState('today'); // 'today' or 'later'
-  const [date, setDate] = useState(defaultDate.toISOString().substring(0, 10));
+  console.log("AddAppointmentModal rendered with defaultDate:", defaultDate);
+  
+  // Format the date properly to avoid timezone issues
+  const formatLocalDate = (dateObj) => {
+    if (!dateObj) return new Date().toISOString().substring(0, 10);
+    
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  };
+  
+  // Initialize date state from defaultDate prop
+  const [date, setDate] = useState(formatLocalDate(defaultDate));
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [title, setTitle] = useState('');
@@ -20,22 +33,32 @@ function AddAppointmentModal({ onClose, onSave, defaultDate, editingAppointment 
     to: false
   });
 
+  // Log when component mounts
+  useEffect(() => {
+    console.log("AddAppointmentModal mounted with date state:", date);
+  }, []);
+
+  // Update date when defaultDate changes
+  useEffect(() => {
+    if (defaultDate) {
+      const formattedDate = formatLocalDate(defaultDate);
+      console.log("Updating date from defaultDate change:", formattedDate);
+      setDate(formattedDate);
+    }
+  }, [defaultDate]);
+
   // If we're editing, populate the form with appointment data
   useEffect(() => {
     if (editingAppointment) {
+      console.log("Setting form from editingAppointment:", editingAppointment);
       setTitle(editingAppointment.title);
       setDesc(editingAppointment.description || '');
       setDate(editingAppointment.date);
       setFrom(editingAppointment.from);
       setTo(editingAppointment.to);
       setPriority(editingAppointment.priority || 'low');
-      
-      // If editing an appointment for a different day, switch to "later" mode
-      if (editingAppointment.date !== defaultDate.toISOString().substring(0, 10)) {
-        setMode('later');
-      }
     }
-  }, [editingAppointment, defaultDate]);
+  }, [editingAppointment]);
 
   // Validate time whenever from or to changes
   useEffect(() => {
@@ -95,8 +118,14 @@ function AddAppointmentModal({ onClose, onSave, defaultDate, editingAppointment 
       appointment.id = editingAppointment.id;
     }
 
+    console.log("Saving appointment with date:", date);
     onSave(appointment);
   };
+
+  // Log when date changes
+  useEffect(() => {
+    console.log("Date state changed to:", date);
+  }, [date]);
 
   return (
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -111,40 +140,21 @@ function AddAppointmentModal({ onClose, onSave, defaultDate, editingAppointment 
           </button>
         </div>
 
-        <div className="modal-tabs">
-          <button
-            className={`tab-button ${mode === 'today' ? 'active' : ''}`}
-            onClick={() => {
-              setMode('today');
-              setDate(defaultDate.toISOString().substring(0, 10));
-            }}
-          >
-            Schedule Today
-          </button>
-          <button
-            className={`tab-button ${mode === 'later' ? 'active' : ''}`}
-            onClick={() => setMode('later')}
-          >
-            Schedule Later
-          </button>
-        </div>
-
         <div className="modal-body">
           <div className="form-group">
             <label className="form-label">
               <FontAwesomeIcon icon={faCalendarAlt} className="field-icon" />
               Date <span className="required">*</span>
             </label>
-            {mode === 'today' ? (
-              <div className="date-display">{new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
-            ) : (
-              <input
-                type="date"
-                className="form-input"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
-            )}
+            <input
+              type="date"
+              className="form-input"
+              value={date}
+              onChange={(e) => {
+                console.log("Date input changed to:", e.target.value);
+                setDate(e.target.value);
+              }}
+            />
           </div>
 
           <div className="time-inputs">

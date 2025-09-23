@@ -1,0 +1,178 @@
+/* Mobile Menu */
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  z-index: 1000;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.mobile-menu.open {
+  transform: translateX(0);
+}
+
+.mobile-menu-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.close-menu-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--gray-700);
+  cursor: pointer;
+}
+
+.mobile-menu-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+.mobile-date-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.mobile-appointments-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Mobile menu icon button */
+.mobile-menu .icon-button {
+  background-color: var(--gray-100);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--gray-700);
+}
+
+.mobile-menu .icon-button:hover {
+  background-color: var(--gray-200);
+  color: var(--primary-color);
+}
+
+/* Current date display in mobile menu */
+.mobile-menu .current-date {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-menu .date-icon {
+  color: var(--primary-color);
+  font-size: 1.2rem;
+}
+
+.mobile-menu .current-date h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: 0;
+}
+
+/* Panel styles for mobile menu */
+.mobile-menu .panel-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mobile-menu .panel-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-menu .panel-icon {
+  color: var(--primary-color);
+}
+
+.mobile-menu .appointment-count {
+  background-color: var(--gray-200);
+  color: var(--gray-700);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.mobile-menu .panel-content {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+/* Empty state in mobile menu */
+.mobile-menu .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--gray-600);
+}
+
+.mobile-menu .empty-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.mobile-menu .quick-add-button {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--gray-200);
+  color: var(--gray-700);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.mobile-menu .quick-add-button:hover {
+  background-color: var(--gray-300);
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .mobile-menu .current-date h2 {
+    font-size: 1.2rem;
+  }
+  
+  .mobile-menu .icon-button {
+    width: 36px;
+    height: 36px;
+  }
+}

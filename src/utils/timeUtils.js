@@ -50,3 +50,54 @@ export const formatMinutesToTime = (minutes) => {
   const mins = minutes % 60;
   return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 };
+
+/**
+ * Format date to YYYY-MM-DD for use as object keys
+ * @param {Date} date - The date to format
+ * @returns {string} Formatted date string
+ */
+export const formatDateKey = (date) => {
+  if (typeof date === 'string') return date;
+  
+  // Create a date string that preserves the local date regardless of timezone
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * Format date for display in header and other UI elements
+ * @param {Date} date - The date to format
+ * @returns {string} Formatted date string for display
+ */
+export const formatDateDisplay = (date) => {
+  const options = { weekday: 'long', month: 'long', day: 'numeric' };
+  return date.toLocaleDateString('en-US', options);
+};
+
+/**
+ * Format local date to avoid timezone issues
+ * @param {Date} dateObj - The date object to format
+ * @returns {string} Formatted date string in YYYY-MM-DD format
+ */
+export const formatLocalDate = (dateObj) => {
+  if (!dateObj) return new Date().toISOString().substring(0, 10);
+  
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * Parse time string to minutes for comparison
+ * @param {string} timeStr - Time string in format "HH:MM"
+ * @returns {number} Total minutes
+ */
+export const parseTime = (timeStr) => {
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  return hours * 60 + minutes;
+};

@@ -1,0 +1,124 @@
+/* Appointments Panel */
+.appointments-panel {
+  width: 350px;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-icon {
+  color: var(--primary-color);
+}
+
+.appointment-count {
+  background-color: var(--gray-200);
+  color: var(--gray-700);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.panel-content {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--gray-600);
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.quick-add-button {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--gray-200);
+  color: var(--gray-700);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.quick-add-button:hover {
+  background-color: var(--gray-300);
+}
+
+/* Appointments List */
+.appointments-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Loading Container */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 40px;
+  color: var(--gray-600);
+}
+
+.loading-spinner {
+  border: 3px solid var(--gray-200);
+  border-radius: 50%;
+  border-top: 3px solid var(--primary-color);
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .appointments-panel {
+    width: 100%;
+    order: 2;
+    display: none; /* Hide on mobile, show in mobile menu instead */
+  }
+}
