@@ -216,6 +216,24 @@
   z-index: 5; /* Ensure it's above the cell background */
   width: 100%; /* Take full width of cell */
 }
+/* Add this to your TimeGrid.css */
+.week-day-header {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.week-day-header:hover {
+  background-color: var(--gray-200);
+}
+
+.week-day-header.current-day {
+  background-color: var(--primary-light);
+  color: white;
+}
+
+.week-day-header.current-day:hover {
+  background-color: var(--primary-dark);
+}
 
 .week-appointment {
   padding: 4px 8px;

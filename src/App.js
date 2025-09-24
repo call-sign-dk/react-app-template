@@ -224,7 +224,10 @@ function App() {
       setLoading(false);
     }
   };
-
+ // Add this function to handle day selection in week view
+const handleDateSelect = (date) => {
+  setSelectedDate(date);
+};
   // Function to handle opening the modal with debug logs
   const handleOpenModal = () => {
     console.log("handleOpenModal called, selectedDate:", selectedDate);
@@ -281,15 +284,17 @@ function App() {
             loading={loading}
           />
           {/* Right Panel: Time Grid */}
-          <div className="time-grid-panel">
-            <TimeGrid
-              date={selectedDate}
-              appointments={appointments}
-              loading={loading}
-              viewMode={viewMode}
-              onEditAppointment={handleEditAppointment}
-            />
-          </div>
+<div className="time-grid-panel">
+  <TimeGrid
+    date={selectedDate}
+    appointments={appointments}
+    loading={loading}
+    viewMode={viewMode}
+    onEditAppointment={handleEditAppointment}
+    onDateSelect={handleDateSelect}
+  />
+</div>
+
         </div>
       </div>
       

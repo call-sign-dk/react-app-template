@@ -4,7 +4,7 @@ import { faClock, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { formatDateKey, parseTime } from '../utils/timeUtils';
 import '../styles/TimeGrid.css';
 
-function TimeGrid({ date, appointments, loading, viewMode = 'day', onEditAppointment }) {
+function TimeGrid({ date, appointments, loading, viewMode = 'day', onEditAppointment, onDateSelect }) {
   // Format date for display
   const formatDateDisplay = (date) => {
     const options = { weekday: 'short', month: 'short', day: 'numeric' };
@@ -142,6 +142,7 @@ function TimeGrid({ date, appointments, loading, viewMode = 'day', onEditAppoint
               <div 
                 key={index} 
                 className={`week-day-header ${formatDateKey(day) === selectedDateKey ? 'current-day' : ''}`}
+                onClick={() => onDateSelect && onDateSelect(day)}
               >
                 {formatDateDisplay(day)}
               </div>

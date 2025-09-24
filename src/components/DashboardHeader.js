@@ -23,6 +23,30 @@ function DashboardHeader({
   setShowCalendar,
   setSelectedDate
 }) {
+  // Format the week range for display in week view
+  const formatWeekRange = () => {
+    if (viewMode !== 'week') return formatDateDisplay(selectedDate);
+    
+    const startOfWeek = new Date(selectedDate);
+    startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay()); // Start from Sunday
+    
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6); // End on Saturday
+    
+    // Format: "May 1 - 7, 2023" if same month, or "Apr 30 - May 6, 2023" if different months
+    const startMonth = startOfWeek.toLocaleString('en-US', { month: 'short' });
+    const endMonth = endOfWeek.toLocaleString('en-US', { month: 'short' });
+    const startDay = startOfWeek.getDate();
+    const endDay = endOfWeek.getDate();
+    const year = endOfWeek.getFullYear();
+    
+    if (startMonth === endMonth) {
+      return `${startMonth} ${startDay} - ${endDay}, ${year}`;
+    } else {
+      return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+    }
+  };
+
   return (
     <div className="dashboard-header">
       <div className="date-selector">
@@ -32,7 +56,7 @@ function DashboardHeader({
         <div className="current-date">
           <div className="calendar-button" onClick={() => setShowCalendar(!showCalendar)}>
             <FontAwesomeIcon icon={faCalendarAlt} className="date-icon" />
-            <h2>{formatDateDisplay(selectedDate)}</h2>
+            <h2>{formatWeekRange()}</h2>
             <FontAwesomeIcon 
               icon={showCalendar ? faChevronUp : faChevronDown} 
               className="calendar-toggle-icon" 
