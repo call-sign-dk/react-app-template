@@ -38,6 +38,7 @@
   background-color: var(--gray-200);
   border-radius: var(--border-radius);
   overflow: hidden;
+  position: relative;
 }
 
 .timeline-hour {
@@ -58,23 +59,24 @@
   font-weight: 500;
   color: var(--gray-700);
   border-right: 1px solid var(--gray-200);
+  box-sizing: border-box;
+  position: relative;
+  z-index: 10;
 }
 
 .hour-content {
   flex: 1;
   position: relative;
-  padding: 4px;
+  padding: 0;
   z-index: 1;
 }
 
-.empty-slot {
+/*.empty-slot {
   height: 100%;
-}
+}*/
 
 .timeline-appointment {
   position: absolute;
-  left: 8px;
-  right: 8px;
   border-radius: 6px;
   color: white;
   padding: 8px;
@@ -83,6 +85,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
   transition: transform 0.2s ease;
   border: 1px solid rgba(255,255,255,0.2);
+  box-sizing: border-box;
 }
 
 .timeline-appointment:hover {
