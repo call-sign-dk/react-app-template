@@ -117,7 +117,7 @@ function TimeGrid({ date, appointments, loading, viewMode = 'day', onEditAppoint
     );
   }
   
-  // Week View
+  // Week View - Modified to use overlay approach for appointments
   return (
     <div className="time-grid-container">
       <div className="time-grid-header">
@@ -142,58 +142,75 @@ function TimeGrid({ date, appointments, loading, viewMode = 'day', onEditAppoint
             ))}
           </div>
           
-          {/* Hour rows - all 24 hours */}
-          {allHours.map(hour => (
-            <div key={hour} className="week-hour-row">
-              <div className="week-hour-label">
-                {formatTime12Hour(hour)}
-              </div>
-              
-              {/* Day cells */}
-              {weekDates.map((day, dayIndex) => {
-                const dayKey = formatDateKey(day);
-                const dayAppointments = appointments[dayKey] || [];
+          <div className="week-body" style={{ position: 'relative' }}>
+            {/* Hour rows - all 24 hours */}
+            {allHours.map(hour => (
+              <div key={hour} className="week-hour-row">
+                <div className="week-hour-label">
+                  {formatTime12Hour(hour)}
+                </div>
                 
-                // Find appointments for this hour and day
-                const hourAppointments = dayAppointments.filter(appointment => {
-                  const startMinutes = parseTime(appointment.from);
-                  const endMinutes = parseTime(appointment.to);
-                  const hourStartMinutes = hour * 60;
-                  const hourEndMinutes = (hour + 1) * 60;
+                {/* Day cells - empty cells for the grid */}
+                {weekDates.map((day, dayIndex) => {
+                  const dayKey = formatDateKey(day);
                   
                   return (
-                    (startMinutes >= hourStartMinutes && startMinutes < hourEndMinutes) ||
-                    (endMinutes > hourStartMinutes && endMinutes <= hourEndMinutes) ||
-                    (startMinutes <= hourStartMinutes && endMinutes >= hourEndMinutes)
+                    <div 
+                      key={dayIndex} 
+                      className={`week-cell ${dayKey === selectedDateKey ? 'current-day' : ''}`}
+                    >
+                      <div className="empty-cell"></div>
+                    </div>
                   );
-                });
+                })}
+              </div>
+            ))}
+            
+            {/* Render appointments as overlays */}
+            {weekDates.map((day, dayIndex) => {
+              const dayKey = formatDateKey(day);
+              const dayAppointments = appointments[dayKey] || [];
+              
+              return dayAppointments.map((appointment, apptIndex) => {
+                const startMinutes = parseTime(appointment.from);
+                const endMinutes = parseTime(appointment.to);
+                
+                // Calculate position and height based on the entire day (24 hours = 1440 minutes)
+                const startPercent = (startMinutes / 1440) * 100;
+                const heightPercent = ((endMinutes - startMinutes) / 1440) * 100;
+                
+                // Calculate horizontal position
+                // We need to account for the hour label width and position within the correct day column
+                const hourLabelWidth = 100; // Width in pixels - adjust if needed
+                const cellWidth = `calc((100% - ${hourLabelWidth}px) / ${weekDates.length})`;
                 
                 return (
                   <div 
-                    key={dayIndex} 
-                    className={`week-cell ${dayKey === selectedDateKey ? 'current-day' : ''}`}
+                    key={`${dayKey}-${apptIndex}`}
+                    className={`week-appointment-overlay ${appointment.priority}`}
+                    style={{
+                      position: 'absolute',
+                      top: `${startPercent}%`,
+                      height: `${heightPercent}%`,
+                      left: `calc(${hourLabelWidth}px + (${dayIndex} * ${cellWidth}))`,
+                      width: `calc(${cellWidth} - 8px)`, // Subtract padding
+                      zIndex: 50
+                    }}
+                    title={`${appointment.title} (${appointment.from}-${appointment.to})`}
+                    onClick={() => onEditAppointment && onEditAppointment(appointment)}
                   >
-                    {hourAppointments.length > 0 ? (
-                      <div className="week-cell-appointments">
-                        {hourAppointments.map((appointment, index) => (
-                          <div 
-                            key={index}
-                            className={`week-appointment ${appointment.priority}`}
-                            title={`${appointment.title} (${appointment.from}-${appointment.to})`}
-                            onClick={() => onEditAppointment && onEditAppointment(appointment)}
-                          >
-                            <div className="week-appointment-title">{appointment.title}</div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="empty-cell"></div>
-                    )}
+                    <div className="appointment-content">
+                      <div className="appointment-title">{appointment.title}</div>
+                      <div className="appointment-time">{appointment.from} - {appointment.to}</div>
+                      {appointment.description && (
+                        <FontAwesomeIcon icon={faInfoCircle} className="info-icon" title={appointment.description} />
+                      )}
+                    </div>
                   </div>
                 );
-              })}
-            </div>
-          ))}
+              });
+            })}
+          </div>
         </div>
       </div>
     </div>

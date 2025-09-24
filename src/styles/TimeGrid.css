@@ -232,6 +232,43 @@
   max-width: 100%; /* Ensure it doesn't exceed container width */
 }
 
+/* Add these styles for the week view overlay approach */
+.week-body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.week-appointment-overlay {
+  position: absolute;
+  border-radius: 6px;
+  color: white;
+  padding: 8px;
+  overflow: hidden;
+  z-index: 20 !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+  transition: transform 0.2s ease;
+  border: 1px solid rgba(255,255,255,0.2);
+  box-sizing: border-box;
+}
+
+.week-appointment-overlay:hover {
+  transform: scale(1.02);
+  z-index: 21 !important;
+}
+
+.week-appointment-overlay.low {
+  background-color: var(--success-color) !important;
+}
+
+.week-appointment-overlay.medium {
+  background-color: var(--warning-color) !important;
+}
+
+.week-appointment-overlay.high {
+  background-color: var(--danger-color) !important;
+}
+
 .empty-cell {
   height: 100%;
 }
