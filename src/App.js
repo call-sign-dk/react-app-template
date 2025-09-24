@@ -6,7 +6,13 @@ import Notification from './components/Notification';
 import DashboardHeader from './components/DashboardHeader';
 import AppointmentsPanel from './components/AppointmentsPanel';
 import MobileMenu from './components/MobileMenu';
-import { getAppointments, createAppointment, updateAppointment, deleteAppointment } from './services/api';
+import { 
+  getAppointments, 
+  getAppointmentsForRange, 
+  createAppointment, 
+  updateAppointment, 
+  deleteAppointment 
+} from './services/api';
 import { formatDateKey, formatDateDisplay } from './utils/timeUtils';
 import './App.css';
 
@@ -28,19 +34,44 @@ function App() {
     console.log("selectedDate formatted:", selectedDate.toISOString().substring(0, 10));
   }, [selectedDate]);
 
-  // Load appointments when selected date changes
+  // Load appointments when selected date or view mode changes
   useEffect(() => {
     const fetchAppointments = async () => {
-      const dateKey = formatDateKey(selectedDate);
-      
       try {
         setLoading(true);
-        const data = await getAppointments(selectedDate);
         
-        setAppointments(prev => ({
-          ...prev,
-          [dateKey]: data
-        }));
+        if (viewMode === 'day') {
+          // Fetch appointments for a single day
+          const dateKey = formatDateKey(selectedDate);
+          const data = await getAppointments(selectedDate);
+          
+          setAppointments(prev => ({
+            ...prev,
+            [dateKey]: data
+          }));
+        } else if (viewMode === 'week') {
+          // Fetch appointments for the entire week
+          const startOfWeek = new Date(selectedDate);
+          startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay()); // Start from Sunday
+          
+          const endOfWeek = new Date(startOfWeek);
+          endOfWeek.setDate(startOfWeek.getDate() + 6); // End on Saturday
+          
+          // Use the new function to get all appointments for the week at once
+          const weekAppointments = await getAppointmentsForRange(startOfWeek, endOfWeek);
+          
+          // Format into the structure expected by TimeGrid
+          const formattedAppointments = {};
+          weekAppointments.forEach(appointment => {
+            const dateKey = appointment.date; // Already in YYYY-MM-DD format
+            if (!formattedAppointments[dateKey]) {
+              formattedAppointments[dateKey] = [];
+            }
+            formattedAppointments[dateKey].push(appointment);
+          });
+          
+          setAppointments(formattedAppointments);
+        }
       } catch (err) {
         showNotification('Failed to load appointments', 'error');
         console.error(err);
@@ -48,9 +79,9 @@ function App() {
         setLoading(false);
       }
     };
-
+    
     fetchAppointments();
-  }, [selectedDate]);
+  }, [selectedDate, viewMode]); // Added viewMode as a dependency
 
   // Show notification
   const showNotification = (message, type = 'error') => {
@@ -63,13 +94,21 @@ function App() {
   // Navigation functions
   const handlePrevDate = () => {
     const prev = new Date(selectedDate);
-    prev.setDate(prev.getDate() - 1);
+    if (viewMode === 'day') {
+      prev.setDate(prev.getDate() - 1);
+    } else {
+      prev.setDate(prev.getDate() - 7); // Move back a week
+    }
     setSelectedDate(prev);
   };
 
   const handleNextDate = () => {
     const next = new Date(selectedDate);
-    next.setDate(next.getDate() + 1);
+    if (viewMode === 'day') {
+      next.setDate(next.getDate() + 1);
+    } else {
+      next.setDate(next.getDate() + 7); // Move forward a week
+    }
     setSelectedDate(next);
   };
   
@@ -99,7 +138,7 @@ function App() {
           // If we already have appointments for this date
           if (newAppointments[dateKey]) {
             // Replace the updated appointment in the array
-            newAppointments[dateKey] = newAppointments[dateKey].map(appt => 
+            newAppointments[dateKey] = newAppointments[dateKey].map(appt =>
               appt.id === savedAppointment.id ? savedAppointment : appt
             );
           } else {
@@ -184,14 +223,14 @@ function App() {
 
   return (
     <div className="app-container">
-      <Header 
-        onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)} 
+      <Header
+        onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
         isMobileMenuOpen={mobileMenuOpen}
       />
       
       <div className="main-content">
         {/* Mobile Menu */}
-        <MobileMenu 
+        <MobileMenu
           isOpen={mobileMenuOpen}
           onClose={() => setMobileMenuOpen(false)}
           selectedDate={selectedDate}
@@ -204,7 +243,7 @@ function App() {
         />
         
         {/* Dashboard Header */}
-        <DashboardHeader 
+        <DashboardHeader
           selectedDate={selectedDate}
           onPrevDate={handlePrevDate}
           onNextDate={handleNextDate}
@@ -218,17 +257,16 @@ function App() {
         
         <div className="dashboard-content">
           {/* Left Panel: Appointments List */}
-          <AppointmentsPanel 
+          <AppointmentsPanel
             appointments={todaysAppointments}
             onAddAppointment={handleOpenModal}
             onEditAppointment={handleEditAppointment}
             onDeleteAppointment={handleDeleteAppointment}
             loading={loading}
           />
-
           {/* Right Panel: Time Grid */}
           <div className="time-grid-panel">
-            <TimeGrid 
+            <TimeGrid
               date={selectedDate}
               appointments={appointments}
               loading={loading}
@@ -255,10 +293,10 @@ function App() {
       
       {/* Notification component */}
       {notification.show && (
-        <Notification 
-          message={notification.message} 
-          type={notification.type} 
-          onClose={() => setNotification({ ...notification, show: false })} 
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification({ ...notification, show: false })}
         />
       )}
     </div>

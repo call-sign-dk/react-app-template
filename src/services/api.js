@@ -1,9 +1,17 @@
+// Modified version of api.js to work with existing backend endpoints
+
 import axios from 'axios';
 
 // Create axios instance with base URL
 const api = axios.create({
   baseURL: 'http://localhost:5022/api', // Adjust this to your .NET API URL
 });
+
+// Cache for storing appointments
+let appointmentsCache = {
+  data: [],
+  lastFetched: null
+};
 
 // Format date for API (YYYY-MM-DD)
 const formatDateForApi = (date) => {
@@ -13,7 +21,6 @@ const formatDateForApi = (date) => {
 };
 
 // Convert time string (HH:MM) to full ISO date string
-// This function now treats the time as local time without timezone conversion
 const timeToIsoString = (dateStr, timeStr) => {
   // Parse the date and time components
   const [year, month, day] = dateStr.split('-').map(Number);
@@ -80,19 +87,79 @@ const formatAppointmentFromApi = (apiAppointment) => {
   return formattedAppointment;
 };
 
-// Get appointments for a specific date
+// Fetch all appointments and cache them
+export const fetchAllAppointments = async (forceRefresh = false) => {
+  try {
+    // Check if we need to refresh the cache (older than 5 minutes or forced refresh)
+    const shouldRefreshCache = 
+      forceRefresh || 
+      !appointmentsCache.lastFetched || 
+      (new Date() - appointmentsCache.lastFetched) > 5 * 60 * 1000;
+    
+    if (shouldRefreshCache) {
+      console.log('Fetching all appointments from API');
+      
+      // Use your "Get All" endpoint
+      const response = await api.get('/appointment');
+      console.log('API response for all appointments:', response.data);
+      
+      // Convert API response to frontend format and store in cache
+      const formattedAppointments = response.data.map(formatAppointmentFromApi);
+      appointmentsCache = {
+        data: formattedAppointments,
+        lastFetched: new Date()
+      };
+    } else {
+      console.log('Using cached appointments');
+    }
+    
+    return appointmentsCache.data;
+  } catch (error) {
+    console.error('Error fetching all appointments:', error);
+    throw error;
+  }
+};
+
+// Get appointments for a specific date (from cache if available)
 export const getAppointments = async (date) => {
   try {
     const formattedDate = formatDateForApi(date);
-    console.log('Fetching appointments for date:', formattedDate);
     
-    const response = await api.get(`/appointment?date=${formattedDate}`);
-    console.log('API response for appointments:', response.data);
+    // Ensure we have all appointments in cache
+    await fetchAllAppointments();
     
-    // Convert API response to frontend format
-    return response.data.map(formatAppointmentFromApi);
+    // Filter appointments for the requested date from the cache
+    const filteredAppointments = appointmentsCache.data.filter(
+      appointment => appointment.date === formattedDate
+    );
+    
+    console.log(`Returning ${filteredAppointments.length} appointments for ${formattedDate} from cache`);
+    return filteredAppointments;
   } catch (error) {
-    console.error('Error fetching appointments:', error);
+    console.error('Error getting appointments for date:', error);
+    throw error;
+  }
+};
+
+// Get appointments for a date range (e.g., week view)
+export const getAppointmentsForRange = async (startDate, endDate) => {
+  try {
+    // Format dates for comparison
+    const formattedStart = formatDateForApi(startDate);
+    const formattedEnd = formatDateForApi(endDate);
+    
+    // Ensure we have all appointments in cache
+    await fetchAllAppointments();
+    
+    // Filter appointments within the date range from cache
+    const filteredAppointments = appointmentsCache.data.filter(appointment => {
+      return appointment.date >= formattedStart && appointment.date <= formattedEnd;
+    });
+    
+    console.log(`Returning ${filteredAppointments.length} appointments for range ${formattedStart} to ${formattedEnd} from cache`);
+    return filteredAppointments;
+  } catch (error) {
+    console.error('Error getting appointments for range:', error);
     throw error;
   }
 };
@@ -106,7 +173,12 @@ export const createAppointment = async (appointmentData) => {
     const response = await api.post('/appointment', apiAppointment);
     console.log('API response for create:', response.data);
     
-    return formatAppointmentFromApi(response.data);
+    const newAppointment = formatAppointmentFromApi(response.data);
+    
+    // Update cache with the new appointment
+    appointmentsCache.data.push(newAppointment);
+    
+    return newAppointment;
   } catch (error) {
     console.error('Error creating appointment:', error);
     if (error.response) {
@@ -133,7 +205,15 @@ export const updateAppointment = async (id, appointmentData) => {
     const response = await api.put(`/appointment/${id}`, apiAppointment);
     console.log('API response for update:', response.data);
     
-    return formatAppointmentFromApi(response.data);
+    const updatedAppointment = formatAppointmentFromApi(response.data);
+    
+    // Update the appointment in the cache
+    const index = appointmentsCache.data.findIndex(a => a.id === id);
+    if (index !== -1) {
+      appointmentsCache.data[index] = updatedAppointment;
+    }
+    
+    return updatedAppointment;
   } catch (error) {
     console.error('Error updating appointment:', error);
     if (error.response) {
@@ -149,6 +229,10 @@ export const deleteAppointment = async (id) => {
   try {
     console.log(`Deleting appointment ${id}`);
     await api.delete(`/appointment/${id}`);
+    
+    // Remove the appointment from the cache
+    appointmentsCache.data = appointmentsCache.data.filter(a => a.id !== id);
+    
     return true;
   } catch (error) {
     console.error('Error deleting appointment:', error);

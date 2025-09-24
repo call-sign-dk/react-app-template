@@ -74,7 +74,10 @@
 /*.empty-slot {
   height: 100%;
 }*/
-
+.timeline-appointment:hover,
+.week-appointment-overlay:hover {
+  background-color: transparent !important; /* Reset first */
+}
 .timeline-appointment {
   position: absolute;
   border-radius: 6px;
@@ -84,6 +87,7 @@
   z-index: 20 !important;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
   transition: transform 0.2s ease;
+  /*transition: all 0.2s ease;*/
   border: 1px solid rgba(255,255,255,0.2);
   box-sizing: border-box;
 }
@@ -91,6 +95,21 @@
 .timeline-appointment:hover {
   transform: scale(1.02);
   z-index: 21 !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5); /* Brighter border on hover */
+  cursor: pointer;
+}
+/* Ensure hover background colors match priority */
+.timeline-appointment.low:hover {
+  background-color: var(--success-color) !important;
+}
+
+.timeline-appointment.medium:hover {
+  background-color: var(--warning-color) !important;
+}
+
+.timeline-appointment.high:hover {
+  background-color: var(--danger-color) !important;
 }
 
 .timeline-appointment.low {
@@ -260,6 +279,21 @@
 .week-appointment-overlay:hover {
   transform: scale(1.02);
   z-index: 21 !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5); /* Brighter border on hover */
+  cursor: pointer;
+}
+/* Ensure hover background colors match priority */
+.week-appointment-overlay.low:hover {
+  background-color: var(--success-color) !important;
+}
+
+.week-appointment-overlay.medium:hover {
+  background-color: var(--warning-color) !important;
+}
+
+.week-appointment-overlay.high:hover {
+  background-color: var(--danger-color) !important;
 }
 
 .week-appointment-overlay.low {
