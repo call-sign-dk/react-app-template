@@ -1,5 +1,3 @@
-// Modified version of api.js to work with existing backend endpoints
-
 import axios from 'axios';
 
 // Create axios instance with base URL
@@ -9,8 +7,8 @@ const api = axios.create({
 
 // Cache for storing appointments
 let appointmentsCache = {
-  data: [],
-  lastFetched: null
+  data: {},  // Object where keys are month-year strings (MM-YYYY) and values are appointment objects by date
+  lastFetched: {} // Object to track when each month was last fetched
 };
 
 // Format date for API (YYYY-MM-DD)
@@ -18,6 +16,24 @@ const formatDateForApi = (date) => {
   if (typeof date === 'string') return date;
   const d = new Date(date);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+// Get first and last day of a month
+const getMonthDateRange = (year, month) => {
+  // Month is 0-indexed in JavaScript Date
+  const startDate = new Date(year, month, 1);
+  const endDate = new Date(year, month + 1, 0); // Last day of month
+  
+  return {
+    start: formatDateForApi(startDate),
+    end: formatDateForApi(endDate)
+  };
+};
+
+// Get a cache key for a month (MM-YYYY format)
+const getMonthCacheKey = (date) => {
+  const d = new Date(date);
+  return `${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
 };
 
 // Convert time string (HH:MM) to full ISO date string
@@ -87,54 +103,107 @@ const formatAppointmentFromApi = (apiAppointment) => {
   return formattedAppointment;
 };
 
-// Fetch all appointments and cache them
-export const fetchAllAppointments = async (forceRefresh = false) => {
-  try {
-    // Check if we need to refresh the cache (older than 5 minutes or forced refresh)
-    const shouldRefreshCache = 
-      forceRefresh || 
-      !appointmentsCache.lastFetched || 
-      (new Date() - appointmentsCache.lastFetched) > 5 * 60 * 1000;
+// Fetch appointments for a specific month and store in cache
+const fetchMonthAppointments = async (year, month) => {
+  const monthCacheKey = `${String(month + 1).padStart(2, '0')}-${year}`;
+  
+  // Check if we need to refresh the cache (older than 5 minutes)
+  const shouldRefreshCache = 
+    !appointmentsCache.data[monthCacheKey] ||
+    !appointmentsCache.lastFetched[monthCacheKey] || 
+    (new Date() - appointmentsCache.lastFetched[monthCacheKey]) > 5 * 60 * 1000;
+  
+  if (shouldRefreshCache) {
+    const { start, end } = getMonthDateRange(year, month);
     
-    if (shouldRefreshCache) {
-      console.log('Fetching all appointments from API');
+    console.log(`Fetching appointments for month: ${year}-${month + 1} (${start} to ${end})`);
+    
+    try {
+      // Fetch appointments for this month from the API
+      // We'll use the first day of the month as the date parameter
+      const response = await api.get(`/appointment?date=${start}`);
+      console.log('API response for month appointments:', response.data);
       
-      // Use your "Get All" endpoint
-      const response = await api.get('/appointment');
-      console.log('API response for all appointments:', response.data);
-      
-      // Convert API response to frontend format and store in cache
+      // Convert API response to frontend format
       const formattedAppointments = response.data.map(formatAppointmentFromApi);
-      appointmentsCache = {
-        data: formattedAppointments,
-        lastFetched: new Date()
-      };
-    } else {
-      console.log('Using cached appointments');
+      
+      // Group appointments by date
+      const appointmentsByDate = {};
+      formattedAppointments.forEach(appointment => {
+        if (!appointmentsByDate[appointment.date]) {
+          appointmentsByDate[appointment.date] = [];
+        }
+        appointmentsByDate[appointment.date].push(appointment);
+      });
+      
+      // Update cache
+      appointmentsCache.data[monthCacheKey] = appointmentsByDate;
+      appointmentsCache.lastFetched[monthCacheKey] = new Date();
+    } catch (error) {
+      console.error(`Error fetching appointments for month ${year}-${month + 1}:`, error);
+      // Initialize with empty data if fetch fails
+      appointmentsCache.data[monthCacheKey] = {};
+      appointmentsCache.lastFetched[monthCacheKey] = new Date();
     }
-    
-    return appointmentsCache.data;
-  } catch (error) {
-    console.error('Error fetching all appointments:', error);
-    throw error;
+  } else {
+    console.log(`Using cached appointments for month: ${year}-${month + 1}`);
   }
+  
+  return appointmentsCache.data[monthCacheKey] || {};
+};
+
+// Fetch appointments for current month plus previous and next months
+export const fetchSurroundingMonths = async (date = new Date()) => {
+  const currentDate = new Date(date);
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+  
+  // Calculate previous and next months
+  const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+  const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+  
+  const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+  const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+  
+  console.log(`Fetching appointments for surrounding months: ${prevYear}-${prevMonth + 1}, ${currentYear}-${currentMonth + 1}, ${nextYear}-${nextMonth + 1}`);
+  
+  // Fetch appointments for all three months in parallel
+  await Promise.all([
+    fetchMonthAppointments(prevYear, prevMonth),
+    fetchMonthAppointments(currentYear, currentMonth),
+    fetchMonthAppointments(nextYear, nextMonth)
+  ]);
+  
+  // Return all cached data
+  return appointmentsCache.data;
 };
 
 // Get appointments for a specific date (from cache if available)
 export const getAppointments = async (date) => {
   try {
-    const formattedDate = formatDateForApi(date);
+    const requestDate = new Date(date);
+    const formattedDate = formatDateForApi(requestDate);
+    const year = requestDate.getFullYear();
+    const month = requestDate.getMonth();
+    const monthCacheKey = getMonthCacheKey(requestDate);
     
-    // Ensure we have all appointments in cache
-    await fetchAllAppointments();
+    // Check if we need to fetch data for this month and surrounding months
+    const shouldFetchMonth = 
+      !appointmentsCache.data[monthCacheKey] ||
+      !appointmentsCache.lastFetched[monthCacheKey] || 
+      (new Date() - appointmentsCache.lastFetched[monthCacheKey]) > 5 * 60 * 1000;
     
-    // Filter appointments for the requested date from the cache
-    const filteredAppointments = appointmentsCache.data.filter(
-      appointment => appointment.date === formattedDate
-    );
+    if (shouldFetchMonth) {
+      // If we need to fetch this month, also fetch surrounding months
+      await fetchSurroundingMonths(requestDate);
+    }
     
-    console.log(`Returning ${filteredAppointments.length} appointments for ${formattedDate} from cache`);
-    return filteredAppointments;
+    // Return appointments for the requested date from the cache
+    const monthData = appointmentsCache.data[monthCacheKey] || {};
+    const dateAppointments = monthData[formattedDate] || [];
+    
+    console.log(`Returning ${dateAppointments.length} appointments for ${formattedDate} from cache`);
+    return dateAppointments;
   } catch (error) {
     console.error('Error getting appointments for date:', error);
     throw error;
@@ -144,20 +213,53 @@ export const getAppointments = async (date) => {
 // Get appointments for a date range (e.g., week view)
 export const getAppointmentsForRange = async (startDate, endDate) => {
   try {
-    // Format dates for comparison
-    const formattedStart = formatDateForApi(startDate);
-    const formattedEnd = formatDateForApi(endDate);
+    // Convert to Date objects if they're strings
+    const start = new Date(startDate);
+    const end = new Date(endDate);
     
-    // Ensure we have all appointments in cache
-    await fetchAllAppointments();
+    // Check if we need to fetch data for the months in this range
+    const startMonthKey = getMonthCacheKey(start);
+    const endMonthKey = getMonthCacheKey(end);
     
-    // Filter appointments within the date range from cache
-    const filteredAppointments = appointmentsCache.data.filter(appointment => {
-      return appointment.date >= formattedStart && appointment.date <= formattedEnd;
-    });
+    const shouldFetchStartMonth = 
+      !appointmentsCache.data[startMonthKey] ||
+      !appointmentsCache.lastFetched[startMonthKey] || 
+      (new Date() - appointmentsCache.lastFetched[startMonthKey]) > 5 * 60 * 1000;
     
-    console.log(`Returning ${filteredAppointments.length} appointments for range ${formattedStart} to ${formattedEnd} from cache`);
-    return filteredAppointments;
+    const shouldFetchEndMonth = 
+      startMonthKey !== endMonthKey && (
+        !appointmentsCache.data[endMonthKey] ||
+        !appointmentsCache.lastFetched[endMonthKey] || 
+        (new Date() - appointmentsCache.lastFetched[endMonthKey]) > 5 * 60 * 1000
+      );
+    
+    // Fetch data for start month and surrounding months if needed
+    if (shouldFetchStartMonth) {
+      await fetchSurroundingMonths(start);
+    }
+    
+    // If end month is different and needs fetching, fetch it and its surrounding months
+    if (shouldFetchEndMonth) {
+      await fetchSurroundingMonths(end);
+    }
+    
+    // Collect all appointments within the date range
+    const rangeAppointments = [];
+    const currentDate = new Date(start);
+    
+    while (currentDate <= end) {
+      const dateKey = formatDateForApi(currentDate);
+      const monthKey = getMonthCacheKey(currentDate);
+      
+      if (appointmentsCache.data[monthKey] && appointmentsCache.data[monthKey][dateKey]) {
+        rangeAppointments.push(...appointmentsCache.data[monthKey][dateKey]);
+      }
+      
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    console.log(`Returning ${rangeAppointments.length} appointments for date range`);
+    return rangeAppointments;
   } catch (error) {
     console.error('Error getting appointments for range:', error);
     throw error;
@@ -175,8 +277,14 @@ export const createAppointment = async (appointmentData) => {
     
     const newAppointment = formatAppointmentFromApi(response.data);
     
-    // Update cache with the new appointment
-    appointmentsCache.data.push(newAppointment);
+    // Update the cache if we have data for this month
+    const monthCacheKey = getMonthCacheKey(new Date(newAppointment.date));
+    if (appointmentsCache.data[monthCacheKey]) {
+      if (!appointmentsCache.data[monthCacheKey][newAppointment.date]) {
+        appointmentsCache.data[monthCacheKey][newAppointment.date] = [];
+      }
+      appointmentsCache.data[monthCacheKey][newAppointment.date].push(newAppointment);
+    }
     
     return newAppointment;
   } catch (error) {
@@ -208,9 +316,23 @@ export const updateAppointment = async (id, appointmentData) => {
     const updatedAppointment = formatAppointmentFromApi(response.data);
     
     // Update the appointment in the cache
-    const index = appointmentsCache.data.findIndex(a => a.id === id);
-    if (index !== -1) {
-      appointmentsCache.data[index] = updatedAppointment;
+    // First, remove the old appointment from all caches (since we don't know which month it was in)
+    Object.keys(appointmentsCache.data).forEach(monthKey => {
+      Object.keys(appointmentsCache.data[monthKey] || {}).forEach(dateKey => {
+        if (appointmentsCache.data[monthKey][dateKey]) {
+          appointmentsCache.data[monthKey][dateKey] = 
+            appointmentsCache.data[monthKey][dateKey].filter(a => a.id !== id);
+        }
+      });
+    });
+    
+    // Then add the updated appointment to the correct month/date
+    const monthCacheKey = getMonthCacheKey(new Date(updatedAppointment.date));
+    if (appointmentsCache.data[monthCacheKey]) {
+      if (!appointmentsCache.data[monthCacheKey][updatedAppointment.date]) {
+        appointmentsCache.data[monthCacheKey][updatedAppointment.date] = [];
+      }
+      appointmentsCache.data[monthCacheKey][updatedAppointment.date].push(updatedAppointment);
     }
     
     return updatedAppointment;
@@ -230,8 +352,15 @@ export const deleteAppointment = async (id) => {
     console.log(`Deleting appointment ${id}`);
     await api.delete(`/appointment/${id}`);
     
-    // Remove the appointment from the cache
-    appointmentsCache.data = appointmentsCache.data.filter(a => a.id !== id);
+    // Remove the appointment from all caches
+    Object.keys(appointmentsCache.data).forEach(monthKey => {
+      Object.keys(appointmentsCache.data[monthKey] || {}).forEach(dateKey => {
+        if (appointmentsCache.data[monthKey][dateKey]) {
+          appointmentsCache.data[monthKey][dateKey] = 
+            appointmentsCache.data[monthKey][dateKey].filter(a => a.id !== id);
+        }
+      });
+    });
     
     return true;
   } catch (error) {

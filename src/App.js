@@ -11,7 +11,8 @@ import {
   getAppointmentsForRange, 
   createAppointment, 
   updateAppointment, 
-  deleteAppointment 
+  deleteAppointment,
+  fetchSurroundingMonths
 } from './services/api';
 import { formatDateKey, formatDateDisplay } from './utils/timeUtils';
 import './App.css';
@@ -21,6 +22,7 @@ function App() {
   const [appointments, setAppointments] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const [notification, setNotification] = useState({ show: false, message: '', type: 'error' });
   const [viewMode, setViewMode] = useState('day'); // 'day' or 'week'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -42,6 +44,7 @@ function App() {
         
         if (viewMode === 'day') {
           // Fetch appointments for a single day
+          // This will automatically fetch the surrounding months if needed
           const dateKey = formatDateKey(selectedDate);
           const data = await getAppointments(selectedDate);
           
@@ -57,7 +60,7 @@ function App() {
           const endOfWeek = new Date(startOfWeek);
           endOfWeek.setDate(startOfWeek.getDate() + 6); // End on Saturday
           
-          // Use the new function to get all appointments for the week at once
+          // This will automatically fetch any needed months
           const weekAppointments = await getAppointmentsForRange(startOfWeek, endOfWeek);
           
           // Format into the structure expected by TimeGrid
@@ -81,7 +84,20 @@ function App() {
     };
     
     fetchAppointments();
-  }, [selectedDate, viewMode]); // Added viewMode as a dependency
+  }, [selectedDate, viewMode]);
+
+  // Prefetch data for the current month and surrounding months on initial load
+  useEffect(() => {
+    const prefetchData = async () => {
+      try {
+        await fetchSurroundingMonths(new Date());
+      } catch (err) {
+        console.error('Error prefetching data:', err);
+      }
+    };
+    
+    prefetchData();
+  }, []);
 
   // Show notification
   const showNotification = (message, type = 'error') => {
@@ -102,7 +118,7 @@ function App() {
     setSelectedDate(prev);
   };
 
-  const handleNextDate = () => {
+    const handleNextDate = () => {
     const next = new Date(selectedDate);
     if (viewMode === 'day') {
       next.setDate(next.getDate() + 1);
@@ -304,3 +320,4 @@ function App() {
 }
 
 export default App;
+
