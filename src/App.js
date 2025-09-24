@@ -259,6 +259,8 @@ const handleDateSelect = (date) => {
           onAddAppointment={handleOpenModal}
           onEditAppointment={handleEditAppointment}
           onDeleteAppointment={handleDeleteAppointment}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
         
         {/* Dashboard Header */}

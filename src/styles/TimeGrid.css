@@ -181,11 +181,21 @@
   text-align: center;
   font-weight: 600;
   color: var(--gray-700);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.week-day-header:hover {
+  background-color: var(--gray-200);
 }
 
 .week-day-header.current-day {
   background-color: var(--primary-light);
   color: white;
+}
+
+.week-day-header.current-day:hover {
+  background-color: var(--primary-dark);
 }
 
 .week-hour-row {
@@ -215,24 +225,6 @@
   position: relative; /* Add position relative */
   z-index: 5; /* Ensure it's above the cell background */
   width: 100%; /* Take full width of cell */
-}
-/* Add this to your TimeGrid.css */
-.week-day-header {
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.week-day-header:hover {
-  background-color: var(--gray-200);
-}
-
-.week-day-header.current-day {
-  background-color: var(--primary-light);
-  color: white;
-}
-
-.week-day-header.current-day:hover {
-  background-color: var(--primary-dark);
 }
 
 .week-appointment {
@@ -369,8 +361,9 @@
 
 @media (max-width: 768px) {
   .hour-label, .week-hour-label {
-    width: 70px;
-    font-size: 0.85rem;
+    width: 60px;
+    font-size: 0.8rem;
+    padding: 8px 4px;
   }
   
   .timeline-hour {
@@ -380,16 +373,34 @@
   .week-day-header {
     padding: 8px 4px;
     font-size: 0.85rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .week-hour-row {
     min-height: 40px;
   }
+  
+  .appointment-title {
+    font-size: 0.85rem;
+  }
+  
+  .appointment-time {
+    font-size: 0.7rem;
+  }
+  
+  /* Make appointments easier to tap */
+  .timeline-appointment,
+  .week-appointment-overlay {
+    min-height: 44px;
+  }
 }
 
 @media (max-width: 480px) {
   .hour-label, .week-hour-label {
-    width: 60px;
+    width: 50px;
     padding: 8px 4px;
     font-size: 0.75rem;
   }
@@ -411,31 +422,28 @@
   .appointment-time {
     font-size: 0.7rem;
   }
-  /* Add this to your TimeGrid.css */
-.timeline-hour {
-  position: relative;
-}
-
-.timeline-appointment {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  border-radius: 6px;
-  color: white;
-  padding: 8px;
-  overflow: hidden;
-  z-index: 5; /* Increased z-index to ensure it's above hour dividers */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease;
-}
-
-/* This will hide the hour dividers behind appointments */
-.hour-content {
-  flex: 1;
-  position: relative;
-  padding: 4px;
-  z-index: 1;
-}
+  
+  .week-day-header {
+    padding: 6px 2px;
+    font-size: 0.7rem;
+  }
+  
+  /* Simplify week view on very small screens */
+  .week-appointment-overlay .appointment-time {
+    display: none;
+  }
+  
+  .week-appointment-overlay .info-icon {
+    display: none;
+  }
+  
+  /* This will hide the hour dividers behind appointments */
+  .hour-content {
+    flex: 1;
+    position: relative;
+    padding: 4px;
+    z-index: 1;
+  }
 
   .week-view {
     display: none; /* Hide week view on very small screens */

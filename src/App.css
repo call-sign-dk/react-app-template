@@ -69,6 +69,54 @@ body {
   overflow: hidden;
 }
 
+/* Mobile Menu */
+.mobile-menu {
+  padding: 16px;
+}
+
+.mobile-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.mobile-date-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-date-nav button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--primary-color);
+  cursor: pointer;
+}
+
+.mobile-menu .view-toggle {
+  display: flex;
+  margin-bottom: 16px;
+  background-color: var(--gray-200);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.mobile-menu .toggle-button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.mobile-menu .toggle-button.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
 /* Responsive Styles */
 @media (max-width: 1024px) {
   .dashboard-content {
@@ -87,6 +135,28 @@ body {
   
   .time-grid-panel {
     order: 1;
+  }
+  
+  .dashboard-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .date-selector {
+    width: 100%;
+  }
+  
+  .view-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .add-appointment-button span {
+    display: none; /* Hide text, show only icon on mobile */
+  }
+  
+  .add-appointment-button {
+    padding: 8px 12px;
   }
 }
 
