@@ -176,8 +176,9 @@
   background-color: white;
   border-right: 1px solid var(--gray-200);
   border-bottom: 1px solid var(--gray-200);
-  padding: 4px;
+  padding: 0;
   position: relative; /* Add position relative */
+  box-sizing: border-box;
    min-width: 0;
 }
 
@@ -250,6 +251,7 @@
   transition: transform 0.2s ease;
   border: 1px solid rgba(255,255,255,0.2);
   box-sizing: border-box;
+  margin: 0 2px;
 }
 
 .week-appointment-overlay:hover {

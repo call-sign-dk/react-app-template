@@ -193,8 +193,10 @@ function TimeGrid({ date, appointments, loading, viewMode = 'day', onEditAppoint
                       top: `${startPercent}%`,
                       height: `${heightPercent}%`,
                       left: `calc(${hourLabelWidth}px + (${dayIndex} * ${cellWidth}))`,
-                      width: `calc(${cellWidth} - 8px)`, // Subtract padding
-                      zIndex: 50
+                      width: cellWidth, // Use full cell width
+                      zIndex: 50,
+                      boxSizing: 'border-box', // Include padding in width calculation
+                      padding: '0 4px' // Add horizontal padding inside the appointment
                     }}
                     title={`${appointment.title} (${appointment.from}-${appointment.to})`}
                     onClick={() => onEditAppointment && onEditAppointment(appointment)}
