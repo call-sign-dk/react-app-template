@@ -86,9 +86,6 @@ function TimeGrid({ date, appointments, loading, viewMode = 'day', onEditAppoint
               const startPercent = (startMinutes / 1440) * 100;
               const heightPercent = ((endMinutes - startMinutes) / 1440) * 100;
               
-              // Calculate the hour label width - adjust if needed based on your CSS
-              const hourLabelWidth = 100; // Width in pixels
-              
               return (
                 <div 
                   key={`appt-${index}`}
@@ -97,7 +94,7 @@ function TimeGrid({ date, appointments, loading, viewMode = 'day', onEditAppoint
                     position: 'absolute',
                     top: `${startPercent}%`,
                     height: `${heightPercent}%`,
-                    left: `${hourLabelWidth}px`, // Position right after hour label
+                    left: '100px', // Position right after hour label - will be overridden by CSS for mobile
                     right: '0', // Extend to the right edge
                     zIndex: 50,
                     boxSizing: 'border-box',
@@ -200,11 +197,11 @@ function TimeGrid({ date, appointments, loading, viewMode = 'day', onEditAppoint
                       top: `${startPercent}%`,
                       height: `${heightPercent}%`,
                       left: `calc(${hourLabelWidth}px + (${dayIndex} * ${cellWidth}))`,
-                      width: cellWidth,
+                      width: `calc(${cellWidth} - 2px)`, // Adjusted width to fit better in cell
                       zIndex: 50,
                       boxSizing: 'border-box',
                       padding: '8px',
-                      margin: '0 2px' // Small horizontal margin
+                      margin: '0 1px' // Smaller margin for better alignment
                     }}
                     title={`${appointment.title} (${appointment.from}-${appointment.to})`}
                     onClick={() => onEditAppointment && onEditAppointment(appointment)}

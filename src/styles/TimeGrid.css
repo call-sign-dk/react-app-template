@@ -370,6 +370,11 @@
     min-height: 50px;
   }
   
+  /* Fix for blank space on left side in day view */
+  .timeline-appointment {
+    left: 60px !important; /* Match the hour-label width */
+  }
+  
   .week-day-header {
     padding: 8px 4px;
     font-size: 0.85rem;
@@ -383,18 +388,17 @@
     min-height: 40px;
   }
   
-  .appointment-title {
-    font-size: 0.85rem;
+  /* Hide content in week view on mobile */
+  .week-appointment-overlay .appointment-content {
+    display: none;
   }
   
-  .appointment-time {
-    font-size: 0.7rem;
-  }
-  
-  /* Make appointments easier to tap */
-  .timeline-appointment,
+  /* Simplify week appointments on mobile */
   .week-appointment-overlay {
-    min-height: 44px;
+    padding: 0;
+    margin: 0 1px;
+    border-radius: 4px;
+    border: none;
   }
 }
 
@@ -405,47 +409,17 @@
     font-size: 0.75rem;
   }
   
+  /* Update left position for smaller screens */
+  .timeline-appointment {
+    left: 50px !important; /* Match the hour-label width */
+  }
+  
   .timeline-hour {
     min-height: 40px;
-  }
-  
-  .timeline-appointment {
-    left: 4px;
-    right: 4px;
-    padding: 4px;
-  }
-  
-  .appointment-title {
-    font-size: 0.85rem;
-  }
-  
-  .appointment-time {
-    font-size: 0.7rem;
   }
   
   .week-day-header {
     padding: 6px 2px;
     font-size: 0.7rem;
-  }
-  
-  /* Simplify week view on very small screens */
-  .week-appointment-overlay .appointment-time {
-    display: none;
-  }
-  
-  .week-appointment-overlay .info-icon {
-    display: none;
-  }
-  
-  /* This will hide the hour dividers behind appointments */
-  .hour-content {
-    flex: 1;
-    position: relative;
-    padding: 4px;
-    z-index: 1;
-  }
-
-  .week-view {
-    display: none; /* Hide week view on very small screens */
   }
 }
